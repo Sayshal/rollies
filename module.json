@@ -1,0 +1,13 @@
+{
+  "id": "rollies",
+  "title": "Rollies",
+  "version": "1.0",
+  "compatibility": {
+    "verified": "13"
+  },
+  "description": "<p>Inspired by Critical Roles C3 initiative tiebreak rules: Prompt players to re-roll initiative if tied with another player!</p>",
+  "url": "https://github.com/sayshal/rollies",
+  "flags": {
+    "canUpload": true
+  }
+}
