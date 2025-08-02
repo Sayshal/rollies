@@ -1,0 +1,31 @@
+<div class='rollies-gm-notification'>
+  <div class='notification-header'>
+    <h2>{{localize 'Rollies.GMDialog.Header'}}</h2>
+    <p>{{localize 'Rollies.GMDialog.Description' count=totalTies}}</p>
+  </div>
+
+  <div class='ties-list'>
+    {{#each ties}}
+      <div class='tie-group'>
+        <h4>{{localize 'Rollies.GMDialog.Initiative'}}: {{initiative}}</h4>
+        <div class='tied-combatants'>
+          {{#each combatants}}
+            <div class='combatant'>
+              <img src='{{img}}' alt='{{name}}' class='combatant-image-small' />
+              <span>{{name}}</span>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/each}}
+  </div>
+
+  <div class='dialog-buttons'>
+    <button type='button' data-action='startRolloffs' class='primary-button'>
+      {{localize 'Rollies.GMDialog.StartRolloffs'}}
+    </button>
+    <button type='button' data-action='keepInitiative' class='secondary-button'>
+      {{localize 'Rollies.GMDialog.KeepInitiative'}}
+    </button>
+  </div>
+</div>

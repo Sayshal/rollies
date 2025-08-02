@@ -1,0 +1,227 @@
+/* Rollies Module Styles */
+
+.rollies-dialog .window-content {
+  padding: 1rem;
+}
+
+/* Rolloff Dialog */
+.rollies-rolloff-dialog .rolloff-header {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-border-light-2);
+}
+
+.rollies-rolloff-dialog .rolloff-header h2 {
+  margin: 0 0 0.5rem 0;
+}
+
+.rollies-rolloff-dialog .combatants-list {
+  margin: 1rem 0;
+}
+
+.rollies-rolloff-dialog .combatant-row {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.rollies-rolloff-dialog .combatant-row.rolled {
+  border-color: var(--color-border-dark-2);
+}
+
+.rollies-rolloff-dialog .combatant-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 1rem;
+  border: 2px solid var(--color-border-dark-1);
+}
+
+.rollies-rolloff-dialog .combatant-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rollies-rolloff-dialog .combatant-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.rollies-rolloff-dialog .roll-result {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.rollies-rolloff-dialog .roll-button {
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.rollies-rolloff-dialog .waiting {
+  font-style: italic;
+}
+
+.rollies-rolloff-dialog .rolloff-complete {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.rollies-rolloff-dialog .rolloff-timeout {
+  text-align: center;
+  padding: 0.5rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+/* GM Notification Dialog */
+.rollies-gm-notification .notification-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.rollies-gm-notification .notification-header h2 {
+  margin: 0 0 0.5rem 0;
+}
+
+.rollies-gm-notification .ties-list {
+  margin: 1rem 0;
+}
+
+.rollies-gm-notification .tie-group {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border-light-2);
+  border-radius: 4px;
+}
+
+.rollies-gm-notification .tie-group h4 {
+  margin: 0 0 0.5rem 0;
+}
+
+.rollies-gm-notification .tied-combatants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.rollies-gm-notification .combatant {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.rollies-gm-notification .combatant-image-small {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-dark-1);
+}
+
+/* Winner Announcement Dialog */
+.rollies-winner-announcement .winner-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.rollies-winner-announcement .winner-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.rollies-winner-announcement .winner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.rollies-winner-announcement .winner-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid gold;
+}
+
+.rollies-winner-announcement .winner-info {
+  text-align: center;
+}
+
+.rollies-winner-announcement .winner-name {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+}
+
+.rollies-winner-announcement .winner-text {
+  margin: 0.25rem 0;
+  font-size: 1rem;
+}
+
+.rollies-winner-announcement .initiative-text {
+  margin: 0.25rem 0;
+  font-weight: bold;
+}
+
+/* Dialog Buttons */
+.rollies-dialog .dialog-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-light-2);
+}
+
+.rollies-dialog .primary-button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.rollies-dialog .secondary-button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.rollies-dialog .secondary-button:hover {
+  background: var(--color-bg-highlight);
+}
+
+.rollies-dialog .close-button {
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+/* Chat Message Styles */
+.rollies-winner-message {
+  padding: 0.75rem;
+  border: 2px solid gold;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fff9c4, #f7f1d3);
+  text-align: center;
+}
+
+.rollies-winner-message h3 {
+  margin: 0 0 0.5rem 0;
+  color: #b8860b;
+  font-size: 1.2rem;
+}
+
+.rollies-roll-message {
+  padding: 0.5rem;
+  border-left: 4px solid var(--color-border-dark-2);
+  background: var(--color-bg-highlight);
+  margin: 0.25rem 0;
+}

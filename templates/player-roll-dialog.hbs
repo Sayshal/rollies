@@ -1,0 +1,33 @@
+<div class='rollies-player-roll-dialog'>
+  <div class='rolloff-header'>
+    <h2>{{localize 'Rollies.PlayerDialog.Header'}}</h2>
+    <p>{{localize 'Rollies.PlayerDialog.Instructions' die=dieType}}</p>
+  </div>
+
+  <div class='combatant-info'>
+    <img src='{{combatant.img}}' alt='{{combatant.name}}' class='combatant-image' />
+    <div class='combatant-details'>
+      <h3 class='combatant-name'>{{combatant.name}}</h3>
+      <p>{{localize 'Rollies.PlayerDialog.RollFor'}} {{dieType}}</p>
+    </div>
+  </div>
+
+  {{#unless hasRolled}}
+    <div class='roll-section'>
+      <button type='button' data-action='roll' class='roll-button'>
+        {{localize 'Rollies.PlayerDialog.RollButton'}}
+      </button>
+      <p class='timeout-warning'>{{localize 'Rollies.PlayerDialog.TimeoutWarning' timeout=timeout}}</p>
+    </div>
+  {{else}}
+    <div class='roll-complete'>
+      <p>{{localize 'Rollies.PlayerDialog.RollComplete'}}</p>
+    </div>
+  {{/unless}}
+
+  <div class='dialog-buttons'>
+    <button type='button' data-action='close' class='close-button'>
+      {{localize 'Rollies.PlayerDialog.CloseButton'}}
+    </button>
+  </div>
+</div>

@@ -1,0 +1,20 @@
+<div class='rollies-winner-announcement'>
+  <div class='winner-header'>
+    <h2>{{localize 'Rollies.WinnerDialog.Header'}}</h2>
+  </div>
+
+  <div class='winner-content'>
+    <img src='{{winner.img}}' alt='{{winner.name}}' class='winner-image' />
+    <div class='winner-info'>
+      <h3 class='winner-name'>{{winner.name}}</h3>
+      <p class='winner-text'>{{localize 'Rollies.WinnerDialog.WinsRolloff'}}</p>
+      <p class='initiative-text'>{{localize 'Rollies.WinnerDialog.NewInitiative'}}: {{winner.initiative}}</p>
+    </div>
+  </div>
+
+  <div class='dialog-buttons'>
+    <button type='button' data-action='close' class='close-button'>
+      {{localize 'Rollies.WinnerDialog.CloseButton'}}
+    </button>
+  </div>
+</div>
