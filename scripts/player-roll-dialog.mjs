@@ -18,6 +18,9 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * @property {number} timeout - Timeout duration in seconds
  * @property {number} timeRemaining - Seconds remaining in countdown
  * @property {string} rolloffId - Unique rolloff identifier
+ * @property {string} mode - Rolloff mode: 'solo', 'pair', or 'bracket'
+ * @property {Array<object>} opponents - Opponent data
+ * @property {object} bracket - Bracket structure
  */
 
 /**
@@ -30,7 +33,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     id: 'rollies-player-roll-dialog',
     classes: ['rollies-dialog', 'rollies-player-roll'],
     tag: 'form',
-    position: { width: 400, height: 'auto' },
+    position: { width: 600, height: 'auto' },
     window: { resizable: false, minimizable: false, title: 'Rollies.PlayerDialog.Title' },
     actions: { roll: PlayerRollDialog._onRoll }
   };
@@ -48,16 +51,24 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    * @param {string} rolloffId - Unique identifier for this rolloff
    * @param {Function} resolveCallback - Callback to resolve with roll result
    * @param {Function} rejectCallback - Callback to reject on error
+   * @param {string} mode - Rolloff mode: 'solo', 'pair', or 'bracket'
+   * @param {Array<object>} opponents - Opponent data
+   * @param {object} bracket - Bracket structure
    */
-  constructor(combatant, dieType, rolloffId, resolveCallback, rejectCallback) {
+  constructor(combatant, dieType, rolloffId, resolveCallback, rejectCallback, mode = 'solo', opponents = null, bracket = null) {
     super();
     this.combatant = combatant;
     this.dieType = dieType;
     this.rolloffId = rolloffId;
     this.resolveCallback = resolveCallback;
     this.rejectCallback = rejectCallback;
+    this.mode = mode;
+    this.opponents = opponents || [];
+    this.bracket = bracket;
     this.hasRolled = false;
     this.isClosed = false;
+    this.opponentRolls = new Map(); // Track opponent rolls
+
     const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
     this.timeRemaining = timeoutSeconds;
     this.startTime = Date.now();
@@ -67,7 +78,34 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.timeoutId = setTimeout(() => {
       this._handleTimeout();
     }, timeoutSeconds * 1000);
-    console.log(`${MODULE.ID} | PlayerRollDialog will timeout in ${timeoutSeconds} seconds`);
+
+    // Register hook to listen for roll updates
+    this.hookId = Hooks.on(`${MODULE.ID}.rollUpdate`, this._onRollUpdate.bind(this));
+
+    console.log(`${MODULE.ID} | PlayerRollDialog created in ${mode} mode`);
+  }
+
+  /**
+   * Handle roll update from other players
+   * @param {object} data - Roll update data
+   * @private
+   */
+  _onRollUpdate(data) {
+    // Check if this update is for our rolloff
+    if (data.rolloffId !== this.rolloffId && !data.rolloffId.startsWith(this.rolloffId)) return;
+
+    console.log(`${MODULE.ID} | Received roll update:`, data);
+
+    // Store with matchId-combatantId key to track rolls per match
+    const rollKey = `${data.rolloffId}-${data.combatantId}`;
+    this.opponentRolls.set(rollKey, {
+      total: data.total,
+      name: data.name,
+      img: data.img
+    });
+
+    // Re-render to show opponent's roll
+    if (this.rendered) this.render();
   }
 
   /**
@@ -104,12 +142,77 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   /** @inheritdoc */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
-    context.combatant = { name: this.combatant.name, img: this.combatant.img || this.combatant.actor?.img };
+    context.combatant = {
+      id: this.combatant.id,
+      name: this.combatant.name,
+      img: this.combatant.img || this.combatant.actor?.img
+    };
     context.dieType = this.dieType;
     context.hasRolled = this.hasRolled;
     context.timeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
     context.timeRemaining = this.timeRemaining;
     context.rolloffId = this.rolloffId;
+    context.mode = this.mode;
+
+    // Add opponent data with roll results
+    if (this.mode === 'pair' && this.opponents.length > 0) {
+      context.opponent = {
+        ...this.opponents[0],
+        roll: this.opponentRolls.get(this.opponents[0].id)
+      };
+    }
+
+    // Add bracket data
+    if (this.mode === 'bracket' && this.bracket) {
+      context.bracket = this._prepareBracketContext(this.bracket);
+    }
+
+    return context;
+  }
+
+  /**
+   * Prepare bracket context for template
+   * @param {object} bracket - Raw bracket data
+   * @returns {object} Formatted bracket context
+   * @private
+   */
+  _prepareBracketContext(bracket) {
+    const context = {
+      rounds: bracket.rounds.map((round) => ({
+        roundNumber: round.roundNumber,
+        roundLabel: round.roundNumber + 1, // Add 1 for display
+        matches: round.matches.map((match) => {
+          // Build roll lookup keys
+          const c1RollKey = `${match.matchId}-${match.combatant1.id}`;
+          const c2RollKey = match.combatant2 ? `${match.matchId}-${match.combatant2.id}` : null;
+
+          // Check if this match is complete
+          const matchComplete = !!match.winner;
+
+          return {
+            matchId: match.matchId,
+            matchComplete: matchComplete, // Add this flag
+            combatant1: {
+              ...match.combatant1,
+              roll: this.opponentRolls.get(c1RollKey) || (match.combatant1.id === this.combatant.id && this.hasRolled && match.matchId === this.rolloffId ? { total: this.myRoll } : null),
+              isMe: match.combatant1.id === this.combatant.id,
+              isLoser: match.loser && match.loser.id === match.combatant1.id
+            },
+            combatant2: match.combatant2
+              ? {
+                  ...match.combatant2,
+                  roll: this.opponentRolls.get(c2RollKey) || (match.combatant2.id === this.combatant.id && this.hasRolled && match.matchId === this.rolloffId ? { total: this.myRoll } : null),
+                  isMe: match.combatant2.id === this.combatant.id,
+                  isLoser: match.loser && match.loser.id === match.combatant2.id
+                }
+              : null,
+            winner: match.winner,
+            isActive: !match.winner, // Match is active if no winner yet
+            hasOpponent: !!match.combatant2 // Whether opponent exists (not waiting)
+          };
+        })
+      }))
+    };
     return context;
   }
 
@@ -125,15 +228,21 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.hasRolled = true;
     this._clearCountdown();
     const roll = await new Roll(`1${this.dieType}`).evaluate();
+    this.myRoll = roll.total;
     await this._createRollChatMessage(roll);
     await this.render();
-    setTimeout(() => {
-      if (!this.isClosed) {
-        this._cleanup();
-        this.resolveCallback({ roll: roll, total: roll.total });
-        this.close();
-      }
-    }, 1500);
+    if (this.mode !== 'bracket') {
+      setTimeout(() => {
+        if (!this.isClosed) {
+          this._cleanup();
+          this.resolveCallback({ roll: roll, total: roll.total });
+          this.close();
+        }
+      }, 1500);
+    } else {
+      this._cleanup();
+      this.resolveCallback({ roll: roll, total: roll.total });
+    }
   }
 
   /** @inheritdoc */
@@ -152,10 +261,11 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     console.log(`${MODULE.ID} | Timeout - auto-rolling for`, this.combatant.name);
     this._clearCountdown();
     const roll = await new Roll(`1${this.dieType}`).evaluate({ allowInteractive: false });
+    this.myRoll = roll.total;
     await this._createRollChatMessage(roll, true);
     this._cleanup();
     this.resolveCallback({ roll: roll, total: roll.total });
-    this.close();
+    if (this.mode !== 'bracket') this.close();
   }
 
   /**
@@ -185,6 +295,10 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
       this.timeoutId = null;
     }
     this._clearCountdown();
+    if (this.hookId) {
+      Hooks.off(`${MODULE.ID}.rollUpdate`, this.hookId);
+      this.hookId = null;
+    }
     if (error && this.rejectCallback) this.rejectCallback(error);
   }
 }

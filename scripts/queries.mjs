@@ -13,6 +13,19 @@ import { WinnerAnnouncementDialog } from './winner-announcement-dialog.mjs';
  * @property {string} combatantId - The ID of the combatant rolling
  * @property {string} dieType - The type of die to roll (e.g., 'd20')
  * @property {string} rolloffId - Unique identifier for this rolloff
+ * @property {string} mode - Rolloff mode: 'solo', 'pair', or 'bracket'
+ * @property {Array<object>} [opponents] - Opponent data for pair mode
+ * @property {object} [bracket] - Bracket structure for bracket mode
+ */
+
+/**
+ * Query data for roll updates
+ * @typedef {object} RollUpdateQuery
+ * @property {string} rolloffId - The rolloff this update belongs to
+ * @property {string} combatantId - The combatant who rolled
+ * @property {number} total - The roll result
+ * @property {string} name - The combatant's name
+ * @property {string} img - The combatant's image
  */
 
 /**
@@ -52,6 +65,7 @@ export function registerQueries() {
   console.log(`${MODULE.ID} | Registering queries`);
   CONFIG.queries[`${MODULE.ID}.requestRoll`] = handleRollRequest;
   CONFIG.queries[`${MODULE.ID}.showWinner`] = handleShowWinner;
+  CONFIG.queries[`${MODULE.ID}.rollUpdate`] = handleRollUpdate;
 }
 
 /**
@@ -63,14 +77,14 @@ export function registerQueries() {
  */
 async function handleRollRequest(queryData, { timeout }) {
   console.log(`${MODULE.ID} | Received roll request:`, queryData);
-  const { combatantId, dieType, rolloffId } = queryData;
+  const { combatantId, dieType, rolloffId, mode, opponents, bracket } = queryData;
   const combatant = game.combat?.combatants?.get(combatantId);
   if (!combatant) throw new Error(`Combatant ${combatantId} not found`);
   if (!game.user.isGM && !combatant.isOwner) throw new Error(`User ${game.user.name} cannot roll for ${combatant.name}`);
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => reject(new Error('Query timeout exceeded')), timeout);
   });
-  const result = await Promise.race([showRollDialog(combatant, dieType, rolloffId, timeout), timeoutPromise]);
+  const result = await Promise.race([showRollDialog(combatant, dieType, rolloffId, timeout, mode, opponents, bracket), timeoutPromise]);
   return { combatantId, rolloffId, roll: result.roll.toJSON(), total: result.total };
 }
 
@@ -101,17 +115,32 @@ async function handleShowWinner(queryData, { timeout }) {
 }
 
 /**
+ * Handle incoming roll update broadcast
+ * @param {RollUpdateQuery} queryData - The query data containing roll update
+ * @param {QueryOptions} _options - Query options
+ * @returns {Promise<object>} Acknowledgment response
+ */
+async function handleRollUpdate(queryData, _options) {
+  console.log(`${MODULE.ID} | Received roll update:`, queryData);
+  Hooks.call(`${MODULE.ID}.rollUpdate`, queryData);
+  return { acknowledged: true };
+}
+
+/**
  * Show roll dialog to player
  * @param {Combatant} combatant - The combatant performing the roll
  * @param {string} dieType - Type of die to roll
  * @param {string} rolloffId - Unique rolloff identifier
  * @param {number} timeout - Maximum time to wait for roll in milliseconds
+ * @param {string} mode - Rolloff mode
+ * @param {Array<object>} opponents - Opponent data
+ * @param {object} bracket - Bracket structure
  * @returns {Promise<object>} Promise that resolves with roll result
  */
-async function showRollDialog(combatant, dieType, rolloffId, timeout) {
+async function showRollDialog(combatant, dieType, rolloffId, timeout, mode = 'solo', opponents = null, bracket = null) {
   return new Promise((resolve, reject) => {
     console.log(`${MODULE.ID} | Creating PlayerRollDialog with timeout: ${timeout}ms`);
-    const dialog = new PlayerRollDialog(combatant, dieType, rolloffId, resolve, reject);
+    const dialog = new PlayerRollDialog(combatant, dieType, rolloffId, resolve, reject, mode, opponents, bracket);
     dialog.render(true);
   });
 }

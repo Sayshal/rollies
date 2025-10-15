@@ -30,15 +30,26 @@
       "AnotherTie": "The rolloff resulted in another tie! Rolling again..."
     },
     "PlayerDialog": {
+      "BracketHeader": "Tournament Bracket Rolloff!",
       "CloseButton": "Close",
       "Header": "Initiative Rolloff Required!",
       "Instructions": "Roll {die} to break the initiative tie",
+      "Opponent": "Opponent",
+      "Roll": "Roll",
       "RollButton": "Roll Dice",
       "RollComplete": "Roll completed! Waiting for results...",
       "RollFor": "Roll for initiative:",
+      "Rolled": "Rolled",
+      "Round": "Round",
+      "TimeRemaining": "Time Remaining:",
       "TimeoutSeconds": "seconds",
       "TimeoutWarning": "Auto-rolling in",
-      "Title": "Initiative Rolloff"
+      "Title": "Initiative Rolloff",
+      "VersusHeader": "Initiative Showdown!",
+      "WaitingForOpponent": "Waiting for opponent...",
+      "WaitingForRoll": "Rolling...",
+      "WaitingForWinner": "Awaiting winner from previous match",
+      "You": "You"
     },
     "Settings": {
       "AutoRolloff": {

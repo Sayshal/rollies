@@ -11,6 +11,9 @@ import { MODULE } from './config.mjs';
  * @typedef {object} RolloffData
  * @property {Combat} combat - The combat encounter
  * @property {Array<Combatant>} combatants - Array of tied combatants
+ * @property {string} mode - Rolloff mode: 'pair' or 'bracket'
+ * @property {Map<string, object>} rolls - Map of combatant IDs to roll results
+ * @property {object} [bracket] - Bracket structure for bracket mode
  */
 
 /**
@@ -147,6 +150,18 @@ export class RolloffManager {
   }
 
   /**
+   * Get dexterity score for a combatant
+   * @param {Combatant} combatant - The combatant
+   * @returns {number} The dexterity score
+   */
+  static _getDexterity(combatant) {
+    const actor = combatant.actor;
+    if (!actor) return 0;
+    // D&D 5e system
+    return actor.system?.abilities?.dex?.value || 0;
+  }
+
+  /**
    * Start a rolloff for a group of tied combatants
    * @param {Combat} combat - The combat encounter
    * @param {Array<Combatant>} tiedCombatants - Array of tied combatants
@@ -155,15 +170,45 @@ export class RolloffManager {
   static async _startRolloffForGroup(combat, tiedCombatants) {
     const rolloffId = `${combat.id}-${tiedCombatants[0].initiative}-${Date.now()}`;
     if (this.activeRolloffs.has(rolloffId)) return;
-    this.activeRolloffs.set(rolloffId, { combat, combatants: tiedCombatants });
+
+    const mode = tiedCombatants.length === 2 ? 'pair' : 'bracket';
+    this.activeRolloffs.set(rolloffId, {
+      combat,
+      combatants: tiedCombatants,
+      mode,
+      rolls: new Map()
+    });
+
     try {
-      if (tiedCombatants.length === 2) await this._conductPairRolloff(combat, tiedCombatants, rolloffId);
-      else await this._conductBracketRolloff(combat, tiedCombatants, rolloffId);
+      if (mode === 'pair') {
+        await this._conductPairRolloff(combat, tiedCombatants, rolloffId);
+      } else {
+        await this._conductBracketRolloff(combat, tiedCombatants, rolloffId);
+      }
     } catch (error) {
       console.error(`${MODULE.ID} | Error in rolloff:`, error);
     } finally {
       this.activeRolloffs.delete(rolloffId);
     }
+  }
+
+  /**
+   * Broadcast a roll update to all active users
+   * @param {string} rolloffId - The rolloff ID
+   * @param {Combatant} combatant - The combatant who rolled
+   * @param {number} total - The roll total
+   * @returns {Promise<void>}
+   */
+  static async _broadcastRollUpdate(rolloffId, combatant, total) {
+    const updateData = {
+      rolloffId,
+      combatantId: combatant.id,
+      total,
+      name: combatant.name,
+      img: combatant.img || combatant.actor?.img
+    };
+
+    for (const user of game.users) if (user.active && !user.isGM) await user.query(`${MODULE.ID}.rollUpdate`, updateData, { timeout: 1000 });
   }
 
   /**
@@ -175,26 +220,113 @@ export class RolloffManager {
    */
   static async _conductPairRolloff(combat, tiedCombatants, rolloffId) {
     const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
-    const rollPromises = tiedCombatants.map(async (combatant) => {
+
+    // Prepare opponent data for each combatant
+    const opponentsData = tiedCombatants.map((c) => ({
+      id: c.id,
+      name: c.name,
+      img: c.img || c.actor?.img,
+      userId: this._getOwnerUser(c)?.id
+    }));
+
+    const rollPromises = tiedCombatants.map(async (combatant, index) => {
+      const opponents = [opponentsData[1 - index]]; // The other combatant
       const owner = this._getOwnerUser(combatant);
+
       if (!owner) {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
+        await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
         return { combatant, roll: roll, total: roll.total };
       }
+
       try {
-        const queryData = { combatantId: combatant.id, dieType: dieType, rolloffId: rolloffId };
-        const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, { timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000 });
+        const queryData = {
+          combatantId: combatant.id,
+          dieType: dieType,
+          rolloffId: rolloffId,
+          mode: 'pair',
+          opponents: opponents
+        };
+        const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
+          timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000
+        });
+        await this._broadcastRollUpdate(rolloffId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
       } catch (error) {
         console.warn(`${MODULE.ID} | Player ${owner.name} failed to respond (${error.message}), auto-rolling`);
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
+        await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
         return { combatant, roll: roll, total: roll.total };
       }
     });
+
     const results = await Promise.all(rollPromises);
     await this._resolveRolloff(combat, results, rolloffId);
+  }
+
+  /**
+   * Build bracket structure - lowest 2 dex fight first, winner fights highest dex
+   * @param {Array<Combatant>} combatants - Array of tied combatants
+   * @param {string} baseRolloffId - Base rolloff ID
+   * @returns {object} Bracket structure
+   */
+  static _buildBracket(combatants, baseRolloffId) {
+    // Sort by dexterity (lowest first for easier indexing)
+    const sorted = [...combatants].sort((a, b) => this._getDexterity(a) - this._getDexterity(b));
+
+    const bracket = {
+      rounds: [],
+      combatants: sorted.map((c) => ({
+        id: c.id,
+        name: c.name,
+        img: c.img || c.actor?.img,
+        dex: this._getDexterity(c)
+      }))
+    };
+
+    // Round 0: Lowest two dex fight each other
+    bracket.rounds.push({
+      roundNumber: 0,
+      matches: [
+        {
+          matchId: `${baseRolloffId}-r0-m0`,
+          combatant1: {
+            id: sorted[0].id,
+            name: sorted[0].name,
+            img: sorted[0].img || sorted[0].actor?.img
+          },
+          combatant2: {
+            id: sorted[1].id,
+            name: sorted[1].name,
+            img: sorted[1].img || sorted[1].actor?.img
+          },
+          winner: null,
+          loser: null
+        }
+      ]
+    });
+
+    // Round 1: Winner of round 0 vs highest dex player
+    bracket.rounds.push({
+      roundNumber: 1,
+      matches: [
+        {
+          matchId: `${baseRolloffId}-r1-m0`,
+          combatant1: {
+            id: sorted[2].id,
+            name: sorted[2].name,
+            img: sorted[2].img || sorted[2].actor?.img
+          },
+          combatant2: null, // Will be filled by winner from round 0
+          winner: null,
+          loser: null
+        }
+      ]
+    });
+
+    return bracket;
   }
 
   /**
@@ -205,73 +337,133 @@ export class RolloffManager {
    * @returns {Promise<void>}
    */
   static async _conductBracketRolloff(combat, tiedCombatants, rolloffId) {
-    const shuffled = [...tiedCombatants].sort(() => Math.random() - 0.5);
-    let currentRound = shuffled;
-    let roundNumber = 1;
-    while (currentRound.length > 1) {
-      const nextRound = [];
-      for (let i = 0; i < currentRound.length; i += 2) {
-        if (i + 1 < currentRound.length) {
-          const pair = [currentRound[i], currentRound[i + 1]];
-          const pairRolloffId = `${rolloffId}-r${roundNumber}-p${Math.floor(i / 2)}`;
-          const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
-          const rollPromises = pair.map(async (combatant) => {
-            const owner = this._getOwnerUser(combatant);
-            if (!owner) {
-              const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
-              await this._createAutoRollChatMessage(combatant, roll);
-              return { combatant, roll, total: roll.total };
-            }
-            try {
-              const queryData = { combatantId: combatant.id, dieType, rolloffId: pairRolloffId };
-              const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, { timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000 });
-              return { combatant, roll: Roll.fromData(result.roll), total: result.total };
-            } catch (error) {
-              console.error(error);
-              const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
-              await this._createAutoRollChatMessage(combatant, roll);
-              return { combatant, roll, total: roll.total };
-            }
-          });
-          const pairResults = await Promise.all(rollPromises);
-          const maxTotal = Math.max(...pairResults.map((r) => r.total));
-          const winners = pairResults.filter((r) => r.total === maxTotal);
-          if (winners.length === 1) {
-            const winner = winners[0].combatant;
-            const maxPairInitiative = Math.max(...pair.map((c) => c.initiative));
-            const newInitiative = maxPairInitiative + 0.01;
-            await winner.update({ initiative: newInitiative });
-            await this._createWinnerChatMessage(winner, newInitiative);
-            nextRound.push(winner);
-          } else {
-            ui.notifications.info(game.i18n.localize('Rollies.Messages.AnotherTie'));
-            const subPairId = `${pairRolloffId}-reroll`;
-            await this._conductPairRolloff(
-              combat,
-              winners.map((w) => w.combatant),
-              subPairId
-            );
-            const updatedWinner = winners[0].combatant;
-            nextRound.push(updatedWinner);
-          }
-        } else nextRound.push(currentRound[i]);
-      }
-      currentRound = nextRound;
-      roundNumber++;
-    }
-    if (currentRound.length === 1) {
-      const finalWinner = currentRound[0];
-      const winnerData = { name: finalWinner.name, img: finalWinner.img || finalWinner.actor?.img, initiative: finalWinner.initiative };
-      for (const user of game.users) {
-        if (user.active) {
-          try {
-            await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
-          } catch (error) {
-            console.warn(`${MODULE.ID} | Could not show winner to ${user.name}:`, error.message);
-          }
+    const bracket = this._buildBracket(tiedCombatants, rolloffId);
+    const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
+
+    // Store bracket in active rolloffs
+    const rolloffData = this.activeRolloffs.get(rolloffId);
+    if (rolloffData) rolloffData.bracket = bracket;
+
+    // Round 0: Lowest two dex fight
+    const round0 = bracket.rounds[0];
+    const match0 = round0.matches[0];
+
+    const combatant1 = tiedCombatants.find((c) => c.id === match0.combatant1.id);
+    const combatant2 = tiedCombatants.find((c) => c.id === match0.combatant2.id);
+
+    await this._conductBracketMatch(combat, combatant1, combatant2, match0, bracket, tiedCombatants);
+
+    // Round 1: Winner vs highest dex
+    const round1 = bracket.rounds[1];
+    const match1 = round1.matches[0];
+
+    // Fill in combatant2 with the winner from round 0
+    match1.combatant2 = match0.winner;
+
+    const combatant3 = tiedCombatants.find((c) => c.id === match1.combatant1.id);
+    const winnerFromR0 = tiedCombatants.find((c) => c.id === match0.winner.id);
+
+    await this._conductBracketMatch(combat, combatant3, winnerFromR0, match1, bracket, tiedCombatants);
+
+    // Final winner announcement
+    const finalWinner = combat.combatants.get(match1.winner.id);
+    const winnerData = {
+      name: finalWinner.name,
+      img: finalWinner.img || finalWinner.actor?.img,
+      initiative: finalWinner.initiative
+    };
+
+    for (const user of game.users) {
+      if (user.active) {
+        try {
+          await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
+        } catch (error) {
+          console.warn(`${MODULE.ID} | Could not show winner to ${user.name}:`, error.message);
         }
       }
     }
+  }
+
+  /**
+   * Conduct a single bracket match
+   * @param {Combat} combat - The combat encounter
+   * @param {Combatant} combatant1 - First combatant
+   * @param {Combatant} combatant2 - Second combatant
+   * @param {object} match - Match data object
+   * @param {object} bracket - Full bracket structure
+   * @param {Array<Combatant>} allCombatants - All combatants in the bracket
+   * @returns {Promise<void>}
+   * @private
+   */
+  static async _conductBracketMatch(combat, combatant1, combatant2, match, bracket, allCombatants) {
+    const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
+
+    // Prepare opponents for this match
+    const opponents = [
+      { id: combatant2.id, name: combatant2.name, img: combatant2.img || combatant2.actor?.img },
+      { id: combatant1.id, name: combatant1.name, img: combatant1.img || combatant1.actor?.img }
+    ];
+
+    // Conduct match
+    const matchCombatants = [combatant1, combatant2];
+    const rollPromises = matchCombatants.map(async (combatant, index) => {
+      const owner = this._getOwnerUser(combatant);
+      const opponentData = [opponents[index]];
+
+      if (!owner) {
+        const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
+        await this._createAutoRollChatMessage(combatant, roll);
+        await this._broadcastRollUpdate(match.matchId, combatant, roll.total);
+        return { combatant, roll, total: roll.total };
+      }
+
+      try {
+        const queryData = {
+          combatantId: combatant.id,
+          dieType,
+          rolloffId: match.matchId,
+          mode: 'bracket',
+          opponents: opponentData,
+          bracket: bracket
+        };
+        const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
+          timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000
+        });
+        await this._broadcastRollUpdate(match.matchId, combatant, result.total);
+        return { combatant, roll: Roll.fromData(result.roll), total: result.total };
+      } catch (error) {
+        console.warn(`${MODULE.ID} | Player failed to respond, auto-rolling`);
+        const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
+        await this._createAutoRollChatMessage(combatant, roll);
+        await this._broadcastRollUpdate(match.matchId, combatant, roll.total);
+        return { combatant, roll, total: roll.total };
+      }
+    });
+
+    const matchResults = await Promise.all(rollPromises);
+
+    // Determine winner
+    const maxTotal = Math.max(...matchResults.map((r) => r.total));
+    const winners = matchResults.filter((r) => r.total === maxTotal);
+
+    if (winners.length > 1) {
+      // Tie - reroll this match
+      ui.notifications.info(game.i18n.localize('Rollies.Messages.AnotherTie'));
+      await this._conductBracketMatch(combat, combatant1, combatant2, match, bracket, allCombatants);
+      return; // Winner/loser set in recursive call
+    }
+
+    const winner = winners[0].combatant;
+    const loser = matchResults.find((r) => r.combatant.id !== winner.id).combatant;
+
+    // Update initiative for winner
+    const maxPairInitiative = Math.max(combatant1.initiative, combatant2.initiative);
+    const newInitiative = maxPairInitiative + 0.01;
+    await winner.update({ initiative: newInitiative });
+    await this._createWinnerChatMessage(winner, newInitiative);
+
+    match.winner = { id: winner.id, name: winner.name, img: winner.img || winner.actor?.img };
+    match.loser = { id: loser.id, name: loser.name, img: loser.img || loser.actor?.img };
   }
 
   /**
