@@ -338,7 +338,6 @@ export class RolloffManager {
    */
   static async _conductBracketRolloff(combat, tiedCombatants, rolloffId) {
     const bracket = this._buildBracket(tiedCombatants, rolloffId);
-    const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
 
     // Store bracket in active rolloffs
     const rolloffData = this.activeRolloffs.get(rolloffId);
@@ -432,7 +431,7 @@ export class RolloffManager {
         await this._broadcastRollUpdate(match.matchId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
       } catch (error) {
-        console.warn(`${MODULE.ID} | Player failed to respond, auto-rolling`);
+        console.warn(`${MODULE.ID} | Player failed to respond, auto-rolling`, error);
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
         await this._broadcastRollUpdate(match.matchId, combatant, roll.total);
