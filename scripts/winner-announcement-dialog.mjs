@@ -24,7 +24,7 @@ export class WinnerAnnouncementDialog extends HandlebarsApplicationMixin(Applica
     id: 'rollies-winner-announcement',
     classes: ['rollies-dialog', 'rollies-winner'],
     tag: 'div',
-    position: { width: 350, height: 200 },
+    position: { width: 'auto', height: 'auto' },
     window: { resizable: false, minimizable: false, title: 'Rollies.WinnerDialog.Title' }
   };
 

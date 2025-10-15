@@ -178,7 +178,7 @@ export class RolloffManager {
     const rollPromises = tiedCombatants.map(async (combatant) => {
       const owner = this._getOwnerUser(combatant);
       if (!owner) {
-        const roll = await new Roll(`1${dieType}`).evaluate();
+        const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
         return { combatant, roll: roll, total: roll.total };
       }
@@ -188,7 +188,7 @@ export class RolloffManager {
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
       } catch (error) {
         console.warn(`${MODULE.ID} | Player ${owner.name} failed to respond (${error.message}), auto-rolling`);
-        const roll = await new Roll(`1${dieType}`).evaluate();
+        const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
         return { combatant, roll: roll, total: roll.total };
       }
@@ -218,7 +218,7 @@ export class RolloffManager {
           const rollPromises = pair.map(async (combatant) => {
             const owner = this._getOwnerUser(combatant);
             if (!owner) {
-              const roll = await new Roll(`1${dieType}`).evaluate();
+              const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
               await this._createAutoRollChatMessage(combatant, roll);
               return { combatant, roll, total: roll.total };
             }
@@ -228,7 +228,7 @@ export class RolloffManager {
               return { combatant, roll: Roll.fromData(result.roll), total: result.total };
             } catch (error) {
               console.error(error);
-              const roll = await new Roll(`1${dieType}`).evaluate();
+              const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
               await this._createAutoRollChatMessage(combatant, roll);
               return { combatant, roll, total: roll.total };
             }
@@ -236,8 +236,14 @@ export class RolloffManager {
           const pairResults = await Promise.all(rollPromises);
           const maxTotal = Math.max(...pairResults.map((r) => r.total));
           const winners = pairResults.filter((r) => r.total === maxTotal);
-          if (winners.length === 1) nextRound.push(winners[0].combatant);
-          else {
+          if (winners.length === 1) {
+            const winner = winners[0].combatant;
+            const maxPairInitiative = Math.max(...pair.map((c) => c.initiative));
+            const newInitiative = maxPairInitiative + 0.01;
+            await winner.update({ initiative: newInitiative });
+            await this._createWinnerChatMessage(winner, newInitiative);
+            nextRound.push(winner);
+          } else {
             ui.notifications.info(game.i18n.localize('Rollies.Messages.AnotherTie'));
             const subPairId = `${pairRolloffId}-reroll`;
             await this._conductPairRolloff(
@@ -245,14 +251,27 @@ export class RolloffManager {
               winners.map((w) => w.combatant),
               subPairId
             );
-            nextRound.push(winners[0].combatant);
+            const updatedWinner = winners[0].combatant;
+            nextRound.push(updatedWinner);
           }
         } else nextRound.push(currentRound[i]);
       }
       currentRound = nextRound;
       roundNumber++;
     }
-    if (currentRound.length === 1) await this._applyRolloffWinner(combat, currentRound[0]);
+    if (currentRound.length === 1) {
+      const finalWinner = currentRound[0];
+      const winnerData = { name: finalWinner.name, img: finalWinner.img || finalWinner.actor?.img, initiative: finalWinner.initiative };
+      for (const user of game.users) {
+        if (user.active) {
+          try {
+            await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
+          } catch (error) {
+            console.warn(`${MODULE.ID} | Could not show winner to ${user.name}:`, error.message);
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -323,10 +342,10 @@ export class RolloffManager {
   /**
    * Create a chat message announcing the rolloff winner
    * @param {Combatant} winner - The winning combatant
-   * @param {number} newInitiative - The winner's new initiative value
+   * @param {number} _newInitiative - The winner's new initiative value
    * @returns {Promise<ChatMessage>} The created chat message
    */
-  static async _createWinnerChatMessage(winner, newInitiative) {
+  static async _createWinnerChatMessage(winner, _newInitiative) {
     const content = `<div class="rollies-winner-message">
     <h3>${game.i18n.localize('Rollies.Chat.WinnerAnnouncement')}</h3>
     <p><strong>${winner.name}</strong> ${game.i18n.localize('Rollies.Chat.WinsRolloff')}</p>

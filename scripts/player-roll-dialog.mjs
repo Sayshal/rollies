@@ -151,7 +151,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     if (this.hasRolled || this.isClosed) return;
     console.log(`${MODULE.ID} | Timeout - auto-rolling for`, this.combatant.name);
     this._clearCountdown();
-    const roll = await new Roll(`1${this.dieType}`).evaluate();
+    const roll = await new Roll(`1${this.dieType}`).evaluate({ allowInteractive: false });
     await this._createRollChatMessage(roll, true);
     this._cleanup();
     this.resolveCallback({ roll: roll, total: roll.total });
