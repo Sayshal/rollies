@@ -8,13 +8,18 @@ export class GMNotificationDialog extends HandlebarsApplicationMixin(Application
   static DEFAULT_OPTIONS = {
     id: 'rollies-gm-notification',
     classes: ['rollies-dialog', 'rollies-gm-notification'],
-    title: 'Rollies.GMDialog.Title',
-    template: 'modules/rollies/templates/gm-notification.hbs',
+    tag: 'form',
     position: { width: 400, height: 'auto' },
     window: { resizable: false },
     actions: {
       startRolloffs: GMNotificationDialog._onStartRolloffs,
       keepInitiative: GMNotificationDialog._onKeepInitiative
+    }
+  };
+
+  static PARTS = {
+    form: {
+      template: 'modules/rollies/templates/gm-notification.hbs'
     }
   };
 
@@ -45,13 +50,23 @@ export class GMNotificationDialog extends HandlebarsApplicationMixin(Application
   }
 
   static async _onStartRolloffs(event, target) {
-    const app = ui.windows[target.closest('[data-application-id]').dataset.applicationId];
-    RolloffManager.manuallyStartRolloffs(app.combat, app.tieGroups);
-    app.close();
+    const appId = target.closest('[data-application-id]')?.dataset?.applicationId;
+    if (!appId) return;
+
+    const app = foundry.applications.instances.get(appId);
+    if (app instanceof GMNotificationDialog) {
+      RolloffManager.manuallyStartRolloffs(app.combat, app.tieGroups);
+      app.close();
+    }
   }
 
   static _onKeepInitiative(event, target) {
-    const app = ui.windows[target.closest('[data-application-id]').dataset.applicationId];
-    app.close();
+    const appId = target.closest('[data-application-id]')?.dataset?.applicationId;
+    if (!appId) return;
+
+    const app = foundry.applications.instances.get(appId);
+    if (app instanceof GMNotificationDialog) {
+      app.close();
+    }
   }
 }

@@ -46,7 +46,7 @@ export function registerSettings() {
     config: true,
     type: Number,
     default: 30,
-    range: { min: 10, max: 120, step: 5 }
+    range: { min: 3, max: 60, step: 1 }
   });
 
   game.settings.register(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.showWinnerAnnouncement, {
