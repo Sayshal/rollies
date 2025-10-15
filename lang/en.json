@@ -41,6 +41,8 @@
       "RollFor": "Roll for initiative:",
       "Rolled": "Rolled",
       "Round": "Round",
+      "SpectatingMessage": "Watching the remaining tournament matches...",
+      "SpectatorMode": "You've been eliminated - spectating remaining matches",
       "TimeRemaining": "Time Remaining:",
       "TimeoutSeconds": "seconds",
       "TimeoutWarning": "Auto-rolling in",

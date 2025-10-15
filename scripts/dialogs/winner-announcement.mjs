@@ -1,6 +1,6 @@
 /**
  * Winner announcement dialog for rolloffs
- * @module winner-announcement-dialog
+ * @module dialogs/winner-announcement
  */
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;

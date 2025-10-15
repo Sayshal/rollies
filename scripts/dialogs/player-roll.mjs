@@ -1,9 +1,9 @@
 /**
- * Player roll dialog for initiative rolloffs
- * @module player-roll-dialog
+ * Player roll dialog for initiative rolloffs (pair and solo modes)
+ * @module dialogs/player-roll
  */
 
-import { MODULE } from './config.mjs';
+import { MODULE } from '../config.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -18,13 +18,12 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * @property {number} timeout - Timeout duration in seconds
  * @property {number} timeRemaining - Seconds remaining in countdown
  * @property {string} rolloffId - Unique rolloff identifier
- * @property {string} mode - Rolloff mode: 'solo', 'pair', or 'bracket'
- * @property {Array<object>} opponents - Opponent data
- * @property {object} bracket - Bracket structure
+ * @property {string} mode - Rolloff mode: 'solo' or 'pair'
+ * @property {Array<object>} opponents - Opponent data for pair mode
  */
 
 /**
- * Simple dialog for a player to make their rolloff roll
+ * Simple dialog for a player to make their rolloff roll (pair/solo modes only)
  * @extends {HandlebarsApplicationMixin(ApplicationV2)}
  */
 export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) {
@@ -42,20 +41,19 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    * Template parts configuration
    * @type {object}
    */
-  static PARTS = { form: { template: 'modules/rollies/templates/player-roll-dialog.hbs' } };
+  static PARTS = { form: { template: 'modules/rollies/templates/player-roll.hbs' } };
 
   /**
-   * Create a new PlayerRollDialog
+   * Create a new PlayerRollDialog (for pair/solo modes)
    * @param {Combatant} combatant - The combatant performing the roll
    * @param {string} dieType - Type of die to roll (e.g., 'd20')
    * @param {string} rolloffId - Unique identifier for this rolloff
    * @param {Function} resolveCallback - Callback to resolve with roll result
    * @param {Function} rejectCallback - Callback to reject on error
-   * @param {string} mode - Rolloff mode: 'solo', 'pair', or 'bracket'
-   * @param {Array<object>} opponents - Opponent data
-   * @param {object} bracket - Bracket structure
+   * @param {string} mode - Rolloff mode: 'solo' or 'pair'
+   * @param {Array<object>} opponents - Opponent data for pair mode
    */
-  constructor(combatant, dieType, rolloffId, resolveCallback, rejectCallback, mode = 'solo', opponents = null, bracket = null) {
+  constructor(combatant, dieType, rolloffId, resolveCallback, rejectCallback, mode = 'solo', opponents = null) {
     super();
     this.combatant = combatant;
     this.dieType = dieType;
@@ -64,11 +62,9 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.rejectCallback = rejectCallback;
     this.mode = mode;
     this.opponents = opponents || [];
-    this.bracket = bracket;
     this.hasRolled = false;
     this.isClosed = false;
     this.opponentRolls = new Map();
-
     const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
     this.timeRemaining = timeoutSeconds;
     this.startTime = Date.now();
@@ -78,18 +74,8 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.timeoutId = setTimeout(() => {
       this._handleTimeout();
     }, timeoutSeconds * 1000);
-
-    // Register hook to listen for roll updates
     this.hookId = Hooks.on(`${MODULE.ID}.rollUpdate`, this._onRollUpdate.bind(this));
-
-    console.log(`${MODULE.ID} | 🎭 PlayerRollDialog created:`, {
-      player: game.user.name,
-      combatantName: combatant.name,
-      combatantId: combatant.id,
-      rolloffId,
-      mode,
-      hookId: this.hookId
-    });
+    console.log(`${MODULE.ID} | PlayerRollDialog created in ${mode} mode`);
   }
 
   /**
@@ -98,46 +84,11 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    * @private
    */
   _onRollUpdate(data) {
-    console.log(`${MODULE.ID} | 🎣 _onRollUpdate called for ${game.user.name}:`, {
-      myDialog: {
-        combatantId: this.combatant.id,
-        combatantName: this.combatant.name,
-        rolloffId: this.rolloffId,
-        mode: this.mode
-      },
-      receivedData: data
-    });
-
-    // Check if this update is for our rolloff
-    if (data.rolloffId !== this.rolloffId && !data.rolloffId.startsWith(this.rolloffId)) {
-      console.log(`${MODULE.ID} | ⏭️ Skipping - rolloffId mismatch (${data.rolloffId} vs ${this.rolloffId})`);
-      return;
-    }
-
-    console.log(`${MODULE.ID} | ✅ RolloffId matches, processing update`);
-
-    // Store with matchId-combatantId key to track rolls per match
+    if (data.rolloffId !== this.rolloffId) return;
+    console.log(`${MODULE.ID} | Received roll update:`, data);
     const rollKey = `${data.rolloffId}-${data.combatantId}`;
-    this.opponentRolls.set(rollKey, {
-      total: data.total,
-      name: data.name,
-      img: data.img
-    });
-
-    console.log(`${MODULE.ID} | 💾 Stored roll:`, {
-      key: rollKey,
-      total: data.total,
-      mapSize: this.opponentRolls.size,
-      allKeys: Array.from(this.opponentRolls.keys())
-    });
-
-    // Re-render to show opponent's roll
-    if (this.rendered) {
-      console.log(`${MODULE.ID} | 🔄 Triggering re-render`);
-      this.render();
-    } else {
-      console.warn(`${MODULE.ID} | ⚠️ Dialog not rendered, cannot re-render`);
-    }
+    this.opponentRolls.set(rollKey, { total: data.total, name: data.name, img: data.img });
+    if (this.rendered) this.render();
   }
 
   /**
@@ -185,66 +136,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     context.timeRemaining = this.timeRemaining;
     context.rolloffId = this.rolloffId;
     context.mode = this.mode;
-
-    // Add opponent data with roll results
-    if (this.mode === 'pair' && this.opponents.length > 0) {
-      context.opponent = {
-        ...this.opponents[0],
-        roll: this.opponentRolls.get(this.opponents[0].id)
-      };
-    }
-
-    // Add bracket data
-    if (this.mode === 'bracket' && this.bracket) {
-      context.bracket = this._prepareBracketContext(this.bracket);
-    }
-
-    return context;
-  }
-
-  /**
-   * Prepare bracket context for template
-   * @param {object} bracket - Raw bracket data
-   * @returns {object} Formatted bracket context
-   * @private
-   */
-  _prepareBracketContext(bracket) {
-    const context = {
-      rounds: bracket.rounds.map((round) => ({
-        roundNumber: round.roundNumber,
-        roundLabel: round.roundNumber + 1, // Add 1 for display
-        matches: round.matches.map((match) => {
-          // Build roll lookup keys
-          const c1RollKey = `${match.matchId}-${match.combatant1.id}`;
-          const c2RollKey = match.combatant2 ? `${match.matchId}-${match.combatant2.id}` : null;
-
-          // Check if this match is complete
-          const matchComplete = !!match.winner;
-
-          return {
-            matchId: match.matchId,
-            matchComplete: matchComplete, // Add this flag
-            combatant1: {
-              ...match.combatant1,
-              roll: this.opponentRolls.get(c1RollKey) || (match.combatant1.id === this.combatant.id && this.hasRolled && match.matchId === this.rolloffId ? { total: this.myRoll } : null),
-              isMe: match.combatant1.id === this.combatant.id,
-              isLoser: match.loser && match.loser.id === match.combatant1.id
-            },
-            combatant2: match.combatant2
-              ? {
-                  ...match.combatant2,
-                  roll: this.opponentRolls.get(c2RollKey) || (match.combatant2.id === this.combatant.id && this.hasRolled && match.matchId === this.rolloffId ? { total: this.myRoll } : null),
-                  isMe: match.combatant2.id === this.combatant.id,
-                  isLoser: match.loser && match.loser.id === match.combatant2.id
-                }
-              : null,
-            winner: match.winner,
-            isActive: !match.winner, // Match is active if no winner yet
-            hasOpponent: !!match.combatant2 // Whether opponent exists (not waiting)
-          };
-        })
-      }))
-    };
+    if (this.mode === 'pair' && this.opponents.length > 0) context.opponent = { ...this.opponents[0], roll: this.opponentRolls.get(`${this.rolloffId}-${this.opponents[0].id}`) };
     return context;
   }
 
@@ -263,18 +155,13 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.myRoll = roll.total;
     await this._createRollChatMessage(roll);
     await this.render();
-    if (this.mode !== 'bracket') {
-      setTimeout(() => {
-        if (!this.isClosed) {
-          this._cleanup();
-          this.resolveCallback({ roll: roll, total: roll.total });
-          this.close();
-        }
-      }, 1500);
-    } else {
-      this._cleanup();
-      this.resolveCallback({ roll: roll, total: roll.total });
-    }
+    setTimeout(() => {
+      if (!this.isClosed) {
+        this._cleanup();
+        this.resolveCallback({ roll: roll, total: roll.total });
+        this.close();
+      }
+    }, 1500);
   }
 
   /** @inheritdoc */
@@ -297,7 +184,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     await this._createRollChatMessage(roll, true);
     this._cleanup();
     this.resolveCallback({ roll: roll, total: roll.total });
-    if (this.mode !== 'bracket') this.close();
+    this.close();
   }
 
   /**

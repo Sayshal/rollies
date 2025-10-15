@@ -1,9 +1,9 @@
 /**
  * GM notification dialog for initiative ties
- * @module gm-notification-dialog
+ * @module dialogs/gm-notification
  */
 
-import { RolloffManager } from './rolloff-manager.mjs';
+import { RolloffManager } from '../rolloff-manager.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 

@@ -186,10 +186,10 @@
 }
 
 /* ----------------------------------------- */
-/*  Bracket Mode                             */
+/*  Bracket Tournament Dialog                */
 /* ----------------------------------------- */
-.bracket-mode {
-  .rolloff-header {
+.rollies-bracket-tournament-dialog {
+  .tournament-header {
     text-align: center;
     margin-bottom: 1.5rem;
 
@@ -201,6 +201,25 @@
     p {
       margin: 0;
       color: rgb(120 120 120);
+    }
+  }
+
+  .spectator-notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: rgb(255 193 7 / 15%);
+    border: 0.0625rem solid rgb(255 193 7 / 40%);
+    border-radius: 0.25rem;
+    color: rgb(133 100 4);
+    font-size: 0.95rem;
+    font-weight: 500;
+
+    i {
+      font-size: 1.1rem;
     }
   }
 
@@ -237,6 +256,14 @@
     &.active-match {
       border-color: rgb(40 167 69);
       background: rgb(40 167 69 / 5%);
+    }
+
+    &.my-match:not(.completed-match) {
+      box-shadow: 0 0 0.5rem rgb(40 167 69 / 30%);
+    }
+
+    &.completed-match {
+      opacity: 0.85;
     }
   }
 
@@ -282,12 +309,6 @@
         color: rgb(40 167 69);
       }
 
-      .bye-indicator {
-        font-size: 0.85rem;
-        color: rgb(255 193 7);
-        font-style: italic;
-      }
-
       .waiting-text {
         font-size: 0.9rem;
         color: rgb(120 120 120);
@@ -323,7 +344,7 @@
     }
   }
 
-  .bracket-footer {
+  .tournament-footer {
     text-align: center;
     padding: 1rem;
     border-top: 0.0625rem solid rgb(200 200 200 / 50%);
@@ -349,6 +370,18 @@
           animation: pulse 1s ease-in-out infinite;
         }
       }
+    }
+  }
+
+  .spectator-footer {
+    background: rgb(108 117 125 / 10%);
+    border-radius: 0.25rem;
+
+    .spectator-message {
+      margin: 0;
+      font-size: 0.95rem;
+      color: rgb(108 117 125);
+      font-style: italic;
     }
   }
 }

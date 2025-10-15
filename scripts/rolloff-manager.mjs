@@ -14,6 +14,7 @@ import { MODULE } from './config.mjs';
  * @property {string} mode - Rolloff mode: 'pair' or 'bracket'
  * @property {Map<string, object>} rolls - Map of combatant IDs to roll results
  * @property {object} [bracket] - Bracket structure for bracket mode
+ * @property {Map<string, BracketTournamentDialog>} [dialogs] - Map of user IDs to their tournament dialogs
  */
 
 /**
@@ -157,7 +158,6 @@ export class RolloffManager {
   static _getDexterity(combatant) {
     const actor = combatant.actor;
     if (!actor) return 0;
-    // D&D 5e system
     return actor.system?.abilities?.dex?.value || 0;
   }
 
@@ -170,21 +170,11 @@ export class RolloffManager {
   static async _startRolloffForGroup(combat, tiedCombatants) {
     const rolloffId = `${combat.id}-${tiedCombatants[0].initiative}-${Date.now()}`;
     if (this.activeRolloffs.has(rolloffId)) return;
-
     const mode = tiedCombatants.length === 2 ? 'pair' : 'bracket';
-    this.activeRolloffs.set(rolloffId, {
-      combat,
-      combatants: tiedCombatants,
-      mode,
-      rolls: new Map()
-    });
-
+    this.activeRolloffs.set(rolloffId, { combat, combatants: tiedCombatants, mode, rolls: new Map() });
     try {
-      if (mode === 'pair') {
-        await this._conductPairRolloff(combat, tiedCombatants, rolloffId);
-      } else {
-        await this._conductBracketRolloff(combat, tiedCombatants, rolloffId);
-      }
+      if (mode === 'pair') await this._conductPairRolloff(combat, tiedCombatants, rolloffId);
+      else await this._conductBracketRolloff(combat, tiedCombatants, rolloffId);
     } catch (error) {
       console.error(`${MODULE.ID} | Error in rolloff:`, error);
     } finally {
@@ -194,21 +184,48 @@ export class RolloffManager {
 
   /**
    * Broadcast a roll update to all active users
-   * @param {string} rolloffId - The rolloff ID
+   * @param {string} rolloffId - The rolloff/match ID
    * @param {Combatant} combatant - The combatant who rolled
    * @param {number} total - The roll total
    * @returns {Promise<void>}
+   * @private
    */
   static async _broadcastRollUpdate(rolloffId, combatant, total) {
-    const updateData = {
-      rolloffId,
-      combatantId: combatant.id,
-      total,
-      name: combatant.name,
-      img: combatant.img || combatant.actor?.img
-    };
+    const updateData = { rolloffId, combatantId: combatant.id, total, name: combatant.name, img: combatant.img || combatant.actor?.img };
+    console.log(`${MODULE.ID} | 🔔 Broadcasting roll update:`, updateData);
+    for (const user of game.users) {
+      if (user.active && !user.isGM) {
+        try {
+          await user.query(`${MODULE.ID}.rollUpdate`, updateData, { timeout: 1000 });
+          console.log(`${MODULE.ID} | ✅ Sent to ${user.name}`);
+        } catch (error) {
+          console.warn(`${MODULE.ID} | ⚠️ Failed to send to ${user.name}`, error);
+        }
+      }
+    }
+  }
 
-    for (const user of game.users) if (user.active && !user.isGM) await user.query(`${MODULE.ID}.rollUpdate`, updateData, { timeout: 1000 });
+  /**
+   * Broadcast match completion to all users
+   * @param {string} tournamentId - The tournament ID
+   * @param {string} matchId - The match ID
+   * @param {object} winner - Winner data
+   * @param {object} loser - Loser data
+   * @returns {Promise<void>}
+   * @private
+   */
+  static async _broadcastMatchComplete(tournamentId, matchId, winner, loser) {
+    const updateData = { tournamentId, matchId, winner, loser };
+    console.log(`${MODULE.ID} | 🏁 Broadcasting match complete:`, updateData);
+    for (const user of game.users) {
+      if (user.active && !user.isGM) {
+        try {
+          await user.query(`${MODULE.ID}.matchComplete`, updateData, { timeout: 1000 });
+        } catch (error) {
+          console.warn(`${MODULE.ID} | Failed to broadcast match complete to ${user.name}`, error);
+        }
+      }
+    }
   }
 
   /**
@@ -220,203 +237,71 @@ export class RolloffManager {
    */
   static async _conductPairRolloff(combat, tiedCombatants, rolloffId) {
     const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
-
-    // Prepare opponent data for each combatant
-    const opponentsData = tiedCombatants.map((c) => ({
-      id: c.id,
-      name: c.name,
-      img: c.img || c.actor?.img,
-      userId: this._getOwnerUser(c)?.id
-    }));
-
+    const opponentsData = tiedCombatants.map((c) => ({ id: c.id, name: c.name, img: c.img || c.actor?.img, userId: this._getOwnerUser(c)?.id }));
     const rollPromises = tiedCombatants.map(async (combatant, index) => {
-      const opponents = [opponentsData[1 - index]]; // The other combatant
+      const opponents = [opponentsData[1 - index]];
       const owner = this._getOwnerUser(combatant);
-
       if (!owner) {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
-
-        console.log(`${MODULE.ID} | 🔔 Broadcasting roll (NPC auto-roll):`, {
-          rolloffId,
-          combatantId: combatant.id,
-          combatantName: combatant.name,
-          total: roll.total
-        });
-
-        // ORIGINAL BROADCAST CODE - adding logs
-        for (const user of game.users) {
-          if (user.active && !user.isGM) {
-            try {
-              await user.query(
-                `${MODULE.ID}.rollUpdate`,
-                {
-                  rolloffId,
-                  combatantId: combatant.id,
-                  total: roll.total,
-                  name: combatant.name,
-                  img: combatant.img || combatant.actor?.img
-                },
-                { timeout: 1000 }
-              );
-              console.log(`${MODULE.ID} | ✅ Broadcast sent to ${user.name}`);
-            } catch (err) {
-              console.warn(`${MODULE.ID} | ⚠️ Broadcast failed to ${user.name}:`, err.message);
-            }
-          }
-        }
-
+        await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
         return { combatant, roll: roll, total: roll.total };
       }
-
       try {
-        const queryData = {
-          combatantId: combatant.id,
-          dieType: dieType,
-          rolloffId: rolloffId,
-          mode: 'pair',
-          opponents: opponents
-        };
-
-        console.log(`${MODULE.ID} | 📤 Requesting roll from ${owner.name} for ${combatant.name}`);
-
+        const queryData = { combatantId: combatant.id, dieType: dieType, rolloffId: rolloffId, mode: 'pair', opponents: opponents };
         const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
           timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000
         });
-
-        console.log(`${MODULE.ID} | 📥 Got roll result from ${owner.name}:`, result.total);
-        console.log(`${MODULE.ID} | 🔔 Broadcasting roll (player roll):`, {
-          rolloffId,
-          combatantId: combatant.id,
-          combatantName: combatant.name,
-          total: result.total
-        });
-
-        // ORIGINAL BROADCAST CODE - adding logs
-        for (const user of game.users) {
-          if (user.active && !user.isGM) {
-            try {
-              await user.query(
-                `${MODULE.ID}.rollUpdate`,
-                {
-                  rolloffId,
-                  combatantId: combatant.id,
-                  total: result.total,
-                  name: combatant.name,
-                  img: combatant.img || combatant.actor?.img
-                },
-                { timeout: 1000 }
-              );
-              console.log(`${MODULE.ID} | ✅ Broadcast sent to ${user.name}`);
-            } catch (err) {
-              console.warn(`${MODULE.ID} | ⚠️ Broadcast failed to ${user.name}:`, err.message);
-            }
-          }
-        }
-
+        await this._broadcastRollUpdate(rolloffId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
       } catch (error) {
         console.warn(`${MODULE.ID} | Player ${owner.name} failed to respond (${error.message}), auto-rolling`);
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
-
-        console.log(`${MODULE.ID} | 🔔 Broadcasting roll (timeout auto-roll):`, {
-          rolloffId,
-          combatantId: combatant.id,
-          combatantName: combatant.name,
-          total: roll.total
-        });
-
-        // ORIGINAL BROADCAST CODE - adding logs
-        for (const user of game.users) {
-          if (user.active && !user.isGM) {
-            try {
-              await user.query(
-                `${MODULE.ID}.rollUpdate`,
-                {
-                  rolloffId,
-                  combatantId: combatant.id,
-                  total: roll.total,
-                  name: combatant.name,
-                  img: combatant.img || combatant.actor?.img
-                },
-                { timeout: 1000 }
-              );
-              console.log(`${MODULE.ID} | ✅ Broadcast sent to ${user.name}`);
-            } catch (err) {
-              console.warn(`${MODULE.ID} | ⚠️ Broadcast failed to ${user.name}:`, err.message);
-            }
-          }
-        }
-
+        await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
         return { combatant, roll: roll, total: roll.total };
       }
     });
-
     const results = await Promise.all(rollPromises);
     await this._resolveRolloff(combat, results, rolloffId);
   }
 
   /**
-   * Build bracket structure - lowest 2 dex fight first, winner fights highest dex
+   * Build bracket structure
    * @param {Array<Combatant>} combatants - Array of tied combatants
-   * @param {string} baseRolloffId - Base rolloff ID
+   * @param {string} baseTournamentId - Base tournament ID
    * @returns {object} Bracket structure
    */
-  static _buildBracket(combatants, baseRolloffId) {
-    // Sort by dexterity (lowest first for easier indexing)
+  static _buildBracket(combatants, baseTournamentId) {
     const sorted = [...combatants].sort((a, b) => this._getDexterity(a) - this._getDexterity(b));
-
     const bracket = {
       rounds: [],
-      combatants: sorted.map((c) => ({
-        id: c.id,
-        name: c.name,
-        img: c.img || c.actor?.img,
-        dex: this._getDexterity(c)
-      }))
+      combatants: sorted.map((c) => ({ id: c.id, name: c.name, img: c.img || c.actor?.img, dex: this._getDexterity(c) }))
     };
-
-    // Round 0: Lowest two dex fight each other
     bracket.rounds.push({
       roundNumber: 0,
       matches: [
         {
-          matchId: `${baseRolloffId}-r0-m0`,
-          combatant1: {
-            id: sorted[0].id,
-            name: sorted[0].name,
-            img: sorted[0].img || sorted[0].actor?.img
-          },
-          combatant2: {
-            id: sorted[1].id,
-            name: sorted[1].name,
-            img: sorted[1].img || sorted[1].actor?.img
-          },
+          matchId: `${baseTournamentId}-r0-m0`,
+          combatant1: { id: sorted[0].id, name: sorted[0].name, img: sorted[0].img || sorted[0].actor?.img },
+          combatant2: { id: sorted[1].id, name: sorted[1].name, img: sorted[1].img || sorted[1].actor?.img },
           winner: null,
           loser: null
         }
       ]
     });
-
-    // Round 1: Winner of round 0 vs highest dex player
     bracket.rounds.push({
       roundNumber: 1,
       matches: [
         {
-          matchId: `${baseRolloffId}-r1-m0`,
-          combatant1: {
-            id: sorted[2].id,
-            name: sorted[2].name,
-            img: sorted[2].img || sorted[2].actor?.img
-          },
-          combatant2: null, // Will be filled by winner from round 0
+          matchId: `${baseTournamentId}-r1-m0`,
+          combatant1: { id: sorted[2].id, name: sorted[2].name, img: sorted[2].img || sorted[2].actor?.img },
+          combatant2: null,
           winner: null,
           loser: null
         }
       ]
     });
-
     return bracket;
   }
 
@@ -424,45 +309,52 @@ export class RolloffManager {
    * Conduct a bracket-style rolloff for 3+ combatants
    * @param {Combat} combat - The combat encounter
    * @param {Array<Combatant>} tiedCombatants - Array of tied combatants
-   * @param {string} rolloffId - Unique rolloff identifier
+   * @param {string} tournamentId - Unique tournament identifier
    * @returns {Promise<void>}
    */
-  static async _conductBracketRolloff(combat, tiedCombatants, rolloffId) {
-    const bracket = this._buildBracket(tiedCombatants, rolloffId);
-
-    // Store bracket in active rolloffs
-    const rolloffData = this.activeRolloffs.get(rolloffId);
-    if (rolloffData) rolloffData.bracket = bracket;
-
-    // Round 0: Lowest two dex fight
-    const round0 = bracket.rounds[0];
-    const match0 = round0.matches[0];
-
+  static async _conductBracketRolloff(combat, tiedCombatants, tournamentId) {
+    const bracket = this._buildBracket(tiedCombatants, tournamentId);
+    const rolloffData = this.activeRolloffs.get(tournamentId);
+    if (rolloffData) {
+      rolloffData.bracket = bracket;
+      rolloffData.dialogs = new Map();
+    }
+    console.log(`${MODULE.ID} | 🏆 Starting bracket tournament:`, tournamentId);
+    for (const combatant of tiedCombatants) {
+      const owner = this._getOwnerUser(combatant);
+      if (owner) {
+        try {
+          await owner.query(`${MODULE.ID}.createBracketDialog`, { combatantId: combatant.id, tournamentId: tournamentId, bracket: bracket }, { timeout: 5000 });
+          console.log(`${MODULE.ID} | ✅ Created dialog for ${owner.name}`);
+        } catch (error) {
+          console.warn(`${MODULE.ID} | Failed to create dialog for ${owner.name}`, error);
+        }
+      }
+    }
+    const match0 = bracket.rounds[0].matches[0];
     const combatant1 = tiedCombatants.find((c) => c.id === match0.combatant1.id);
     const combatant2 = tiedCombatants.find((c) => c.id === match0.combatant2.id);
-
-    await this._conductBracketMatch(combat, combatant1, combatant2, match0, bracket, tiedCombatants);
-
-    // Round 1: Winner vs highest dex
-    const round1 = bracket.rounds[1];
-    const match1 = round1.matches[0];
-
-    // Fill in combatant2 with the winner from round 0
+    await this._conductBracketMatch(combat, combatant1, combatant2, match0, tournamentId);
+    const match1 = bracket.rounds[1].matches[0];
     match1.combatant2 = match0.winner;
-
     const combatant3 = tiedCombatants.find((c) => c.id === match1.combatant1.id);
     const winnerFromR0 = tiedCombatants.find((c) => c.id === match0.winner.id);
-
-    await this._conductBracketMatch(combat, combatant3, winnerFromR0, match1, bracket, tiedCombatants);
-
-    // Final winner announcement
+    console.log(`${MODULE.ID} | 🔍 Round 1 combatant lookup:`, {
+      match1Combatant1Id: match1.combatant1.id,
+      match0WinnerId: match0.winner.id,
+      combatant3Found: !!combatant3,
+      combatant3Name: combatant3?.name,
+      winnerFromR0Found: !!winnerFromR0,
+      winnerFromR0Name: winnerFromR0?.name,
+      tiedCombatantIds: tiedCombatants.map((c) => ({ id: c.id, name: c.name }))
+    });
+    if (!combatant3 || !winnerFromR0) {
+      console.error(`${MODULE.ID} | ❌ Failed to find combatants for round 1!`);
+      return;
+    }
+    await this._conductBracketMatch(combat, combatant3, winnerFromR0, match1, tournamentId);
     const finalWinner = combat.combatants.get(match1.winner.id);
-    const winnerData = {
-      name: finalWinner.name,
-      img: finalWinner.img || finalWinner.actor?.img,
-      initiative: finalWinner.initiative
-    };
-
+    const winnerData = { name: finalWinner.name, img: finalWinner.img || finalWinner.actor?.img, initiative: finalWinner.initiative, tournamentId: tournamentId };
     for (const user of game.users) {
       if (user.active) {
         try {
@@ -480,45 +372,35 @@ export class RolloffManager {
    * @param {Combatant} combatant1 - First combatant
    * @param {Combatant} combatant2 - Second combatant
    * @param {object} match - Match data object
-   * @param {object} bracket - Full bracket structure
-   * @param {Array<Combatant>} allCombatants - All combatants in the bracket
+   * @param {string} tournamentId - Tournament identifier
    * @returns {Promise<void>}
    * @private
    */
-  static async _conductBracketMatch(combat, combatant1, combatant2, match, bracket, allCombatants) {
+  static async _conductBracketMatch(combat, combatant1, combatant2, match, tournamentId) {
     const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
-
-    // Prepare opponents for this match
-    const opponents = [
-      { id: combatant2.id, name: combatant2.name, img: combatant2.img || combatant2.actor?.img },
-      { id: combatant1.id, name: combatant1.name, img: combatant1.img || combatant1.actor?.img }
-    ];
-
-    // Conduct match
+    console.log(`${MODULE.ID} | 🥊 Starting match ${match.matchId}:`, {
+      combatant1: { id: combatant1?.id, name: combatant1?.name },
+      combatant2: { id: combatant2?.id, name: combatant2?.name }
+    });
     const matchCombatants = [combatant1, combatant2];
-    const rollPromises = matchCombatants.map(async (combatant, index) => {
+    const rollPromises = matchCombatants.map(async (combatant) => {
       const owner = this._getOwnerUser(combatant);
-      const opponentData = [opponents[index]];
-
+      console.log(`${MODULE.ID} | 👤 Owner lookup for ${combatant?.name}:`, {
+        combatantId: combatant?.id,
+        ownerFound: !!owner,
+        ownerName: owner?.name
+      });
       if (!owner) {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
         await this._broadcastRollUpdate(match.matchId, combatant, roll.total);
         return { combatant, roll, total: roll.total };
       }
-
       try {
-        const queryData = {
-          combatantId: combatant.id,
-          dieType,
-          rolloffId: match.matchId,
-          mode: 'bracket',
-          opponents: opponentData,
-          bracket: bracket
-        };
-        const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
-          timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000
-        });
+        console.log(`${MODULE.ID} | 📤 Sending activateMatch to ${owner.name} for ${combatant.name}`);
+        const timeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000;
+        const result = await owner.query(`${MODULE.ID}.activateMatch`, { matchId: match.matchId, tournamentId: tournamentId }, { timeout: timeout });
+        console.log(`${MODULE.ID} | ✅ Got response from ${owner.name}`);
         await this._broadcastRollUpdate(match.matchId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
       } catch (error) {
@@ -529,31 +411,23 @@ export class RolloffManager {
         return { combatant, roll, total: roll.total };
       }
     });
-
     const matchResults = await Promise.all(rollPromises);
-
-    // Determine winner
     const maxTotal = Math.max(...matchResults.map((r) => r.total));
     const winners = matchResults.filter((r) => r.total === maxTotal);
-
     if (winners.length > 1) {
-      // Tie - reroll this match
       ui.notifications.info(game.i18n.localize('Rollies.Messages.AnotherTie'));
-      await this._conductBracketMatch(combat, combatant1, combatant2, match, bracket, allCombatants);
-      return; // Winner/loser set in recursive call
+      await this._conductBracketMatch(combat, combatant1, combatant2, match, tournamentId);
+      return;
     }
-
     const winner = winners[0].combatant;
     const loser = matchResults.find((r) => r.combatant.id !== winner.id).combatant;
-
-    // Update initiative for winner
     const maxPairInitiative = Math.max(combatant1.initiative, combatant2.initiative);
     const newInitiative = maxPairInitiative + 0.01;
     await winner.update({ initiative: newInitiative });
     await this._createWinnerChatMessage(winner, newInitiative);
-
     match.winner = { id: winner.id, name: winner.name, img: winner.img || winner.actor?.img };
     match.loser = { id: loser.id, name: loser.name, img: loser.img || loser.actor?.img };
+    await this._broadcastMatchComplete(tournamentId, match.matchId, match.winner, match.loser);
   }
 
   /**
