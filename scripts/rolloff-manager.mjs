@@ -1,40 +1,99 @@
-import { GMNotificationDialog } from './gm-notification-dialog.mjs';
-import { ROLLIES_CONFIG } from './config.mjs';
-
 /**
  * Main manager for handling initiative rolloffs
+ * @module rolloff-manager
+ */
+
+import { GMNotificationDialog } from './gm-notification-dialog.mjs';
+import { MODULE } from './config.mjs';
+
+/**
+ * Rolloff tracking data
+ * @typedef {object} RolloffData
+ * @property {Combat} combat - The combat encounter
+ * @property {Array<Combatant>} combatants - Array of tied combatants
+ */
+
+/**
+ * Roll result from a combatant
+ * @typedef {object} CombatantRollResult
+ * @property {Combatant} combatant - The combatant who rolled
+ * @property {Roll} roll - The Roll object
+ * @property {number} total - Total value of the roll
+ */
+
+/**
+ * Main manager class for handling initiative rolloffs
+ * Tracks active rolloffs and processes initiative ties
  */
 export class RolloffManager {
+  /**
+   * Map of active rolloffs by ID
+   * @type {Map<string, RolloffData>}
+   */
   static activeRolloffs = new Map();
+
+  /**
+   * Set of combat IDs that have been processed
+   * @type {Set<string>}
+   */
   static processedCombats = new Set();
 
+  /**
+   * Initialize the rolloff manager
+   * Registers hooks for combat events
+   */
   static initialize() {
-    console.log('Rollies | Initializing RolloffManager');
+    console.log(`${MODULE.ID} | Initializing RolloffManager`);
     Hooks.on('updateCombatant', this._onCombatantUpdate.bind(this));
     Hooks.on('createCombatant', this._onCombatantCreate.bind(this));
     Hooks.on('deleteCombat', this._onCombatDelete.bind(this));
   }
 
-  static _onCombatDelete(combat, options) {
+  /**
+   * Handle combat deletion
+   * Cleans up tracked data for the deleted combat
+   * @param {Combat} combat - The deleted combat encounter
+   * @param {object} _options - Deletion options
+   */
+  static _onCombatDelete(combat, _options) {
     this.processedCombats.delete(combat.id);
     this.activeRolloffs.delete(combat.id);
   }
 
-  static _onCombatantUpdate(combatant, update, options) {
+  /**
+   * Handle combatant update
+   * Checks for initiative ties when initiative is updated
+   * @param {Combatant} combatant - The updated combatant
+   * @param {object} update - Update data
+   * @param {object} _options - Update options
+   */
+  static _onCombatantUpdate(combatant, update, _options) {
     if (!update.initiative) return;
     if (combatant.combat?.started) return;
+
     setTimeout(() => {
       this._checkForInitiativeTies(combatant.combat);
     }, 200);
   }
 
-  static _onCombatantCreate(combatant, options) {
+  /**
+   * Handle combatant creation
+   * Checks for initiative ties when new combatant is added
+   * @param {Combatant} combatant - The created combatant
+   * @param {object} _options - Creation options
+   */
+  static _onCombatantCreate(combatant, _options) {
     if (combatant.combat?.started) return;
+
     setTimeout(() => {
       this._checkForInitiativeTies(combatant.combat);
     }, 300);
   }
 
+  /**
+   * Check for initiative ties in a combat encounter
+   * @param {Combat} combat - The combat encounter to check
+   */
   static _checkForInitiativeTies(combat) {
     if (!combat || combat.started) return;
     if (this.processedCombats.has(combat.id)) return;
@@ -48,7 +107,7 @@ export class RolloffManager {
     const tieGroups = this._findTieGroups(rolledCombatants);
     if (tieGroups.length > 0) {
       console.log(
-        'Rollies | Found tie groups:',
+        `${MODULE.ID} | Found tie groups:`,
         tieGroups.map((g) => g.map((c) => c.name))
       );
       this.processedCombats.add(combat.id);
@@ -56,43 +115,70 @@ export class RolloffManager {
     }
   }
 
+  /**
+   * Get relevant combatants based on settings
+   * @param {Combat} combat - The combat encounter
+   * @returns {Array<Combatant>} Filtered array of combatants
+   */
   static _getRelevantCombatants(combat) {
-    const includeNPCs = game.settings.get(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.includeNPCs);
+    const includeNPCs = game.settings.get(MODULE.ID, MODULE.SETTINGS.INCLUDE_NPCS);
     return combat.combatants.filter((combatant) => {
       if (includeNPCs) return true;
       return combatant.actor?.type === 'character';
     });
   }
 
+  /**
+   * Find groups of combatants with tied initiative
+   * @param {Array<Combatant>} combatants - Array of combatants to check
+   * @returns {Array<Array<Combatant>>} Array of tie groups (each group has 2+ combatants)
+   */
   static _findTieGroups(combatants) {
     const initiativeGroups = {};
+
     combatants.forEach((combatant) => {
       const initiative = combatant.initiative;
-      if (!initiativeGroups[initiative]) initiativeGroups[initiative] = [];
+      if (!initiativeGroups[initiative]) {
+        initiativeGroups[initiative] = [];
+      }
       initiativeGroups[initiative].push(combatant);
     });
+
     return Object.values(initiativeGroups).filter((group) => group.length >= 2);
   }
 
+  /**
+   * Handle detected initiative ties
+   * Either auto-starts rolloffs or notifies GM based on settings
+   * @param {Combat} combat - The combat encounter
+   * @param {Array<Array<Combatant>>} tieGroups - Array of tie groups
+   */
   static _handleInitiativeTies(combat, tieGroups) {
     if (!game.user.isGM) return;
-    const autoRolloff = game.settings.get(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.autoRolloff);
+
+    const autoRolloff = game.settings.get(MODULE.ID, MODULE.SETTINGS.AUTO_ROLLOFF);
     if (autoRolloff) {
-      console.log('Rollies | Auto-starting rolloffs');
+      console.log(`${MODULE.ID} | Auto-starting rolloffs`);
       tieGroups.forEach((group) => this._startRolloffForGroup(combat, group));
     } else {
-      console.log('Rollies | Notifying GM of ties');
+      console.log(`${MODULE.ID} | Notifying GM of ties`);
       this._notifyGMOfTies(combat, tieGroups);
     }
   }
 
+  /**
+   * Start a rolloff for a group of tied combatants
+   * @param {Combat} combat - The combat encounter
+   * @param {Array<Combatant>} tiedCombatants - Array of tied combatants
+   * @returns {Promise<void>}
+   */
   static async _startRolloffForGroup(combat, tiedCombatants) {
     const rolloffId = `${combat.id}-${tiedCombatants[0].initiative}-${Date.now()}`;
     if (this.activeRolloffs.has(rolloffId)) return;
 
     this.activeRolloffs.set(rolloffId, { combat, combatants: tiedCombatants });
     console.log(
-      `Rollies | Starting rolloff ${rolloffId} for:`,
+      `${MODULE.ID} | Starting rolloff ${rolloffId} for:`,
       tiedCombatants.map((c) => c.name)
     );
 
@@ -103,61 +189,75 @@ export class RolloffManager {
         await this._conductBracketRolloff(combat, tiedCombatants, rolloffId);
       }
     } catch (error) {
-      console.error('Rollies | Error in rolloff:', error);
+      console.error(`${MODULE.ID} | Error in rolloff:`, error);
       ui.notifications.error(`Rolloff failed: ${error.message}`);
     } finally {
       this.activeRolloffs.delete(rolloffId);
     }
   }
 
+  /**
+   * Conduct a rolloff between two combatants
+   * @param {Combat} combat - The combat encounter
+   * @param {Array<Combatant>} tiedCombatants - Array of 2 tied combatants
+   * @param {string} rolloffId - Unique rolloff identifier
+   * @returns {Promise<void>}
+   */
   static async _conductPairRolloff(combat, tiedCombatants, rolloffId) {
-    const dieType = game.settings.get(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.rolloffDie);
+    const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
     console.log(
-      'Rollies | Conducting pair rolloff:',
+      `${MODULE.ID} | Conducting pair rolloff:`,
       tiedCombatants.map((c) => c.name)
     );
 
     const rollPromises = tiedCombatants.map(async (combatant) => {
       const owner = this._getOwnerUser(combatant);
-      console.log(`Rollies | Getting roll for ${combatant.name}, owner:`, owner?.name || 'none');
+      console.log(`${MODULE.ID} | Getting roll for ${combatant.name}, owner:`, owner?.name || 'none');
 
       if (!owner) {
-        console.log('Rollies | Auto-rolling for unowned combatant');
+        console.log(`${MODULE.ID} | Auto-rolling for unowned combatant`);
         const roll = await new Roll(`1${dieType}`).evaluate();
         await this._createAutoRollChatMessage(combatant, roll);
         return { combatant, roll: roll, total: roll.total };
       }
 
       try {
-        console.log(`Rollies | Sending query to ${owner.name} for ${combatant.name}`);
+        console.log(`${MODULE.ID} | Sending query to ${owner.name} for ${combatant.name}`);
         const queryData = { combatantId: combatant.id, dieType: dieType, rolloffId: rolloffId };
-        const result = await owner.query(`${ROLLIES_CONFIG.moduleId}.requestRoll`, queryData, {
-          timeout: game.settings.get(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.rolloffTimeout) * 1000
+        const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
+          timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000
         });
-        console.log(`Rollies | Got query result from ${owner.name}:`, result);
+        console.log(`${MODULE.ID} | Got query result from ${owner.name}:`, result);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
       } catch (error) {
-        console.warn(`Rollies | Player ${owner.name} failed to respond (${error.message}), auto-rolling`);
+        console.warn(`${MODULE.ID} | Player ${owner.name} failed to respond (${error.message}), auto-rolling`);
         const roll = await new Roll(`1${dieType}`).evaluate();
         await this._createAutoRollChatMessage(combatant, roll);
         return { combatant, roll: roll, total: roll.total };
       }
     });
 
-    console.log('Rollies | Waiting for all rolls to complete...');
+    console.log(`${MODULE.ID} | Waiting for all rolls to complete...`);
     const results = await Promise.all(rollPromises);
     console.log(
-      'Rollies | All rolls complete:',
+      `${MODULE.ID} | All rolls complete:`,
       results.map((r) => ({ name: r.combatant.name, total: r.total }))
     );
 
     await this._resolveRolloff(combat, results, rolloffId);
   }
 
+  /**
+   * Conduct a bracket-style rolloff for 3+ combatants
+   * @param {Combat} combat - The combat encounter
+   * @param {Array<Combatant>} tiedCombatants - Array of tied combatants
+   * @param {string} rolloffId - Unique rolloff identifier
+   * @returns {Promise<void>}
+   */
   static async _conductBracketRolloff(combat, tiedCombatants, rolloffId) {
     const shuffled = [...tiedCombatants].sort(() => Math.random() - 0.5);
     console.log(
-      'Rollies | Starting bracket rolloff with order:',
+      `${MODULE.ID} | Starting bracket rolloff with order:`,
       shuffled.map((c) => c.name)
     );
 
@@ -166,7 +266,7 @@ export class RolloffManager {
 
     while (currentRound.length > 1) {
       console.log(
-        `Rollies | Bracket round ${roundNumber}:`,
+        `${MODULE.ID} | Bracket round ${roundNumber}:`,
         currentRound.map((c) => c.name)
       );
 
@@ -174,12 +274,10 @@ export class RolloffManager {
 
       for (let i = 0; i < currentRound.length; i += 2) {
         if (i + 1 < currentRound.length) {
-          // Pair exists
           const pair = [currentRound[i], currentRound[i + 1]];
           const pairRolloffId = `${rolloffId}-r${roundNumber}-p${Math.floor(i / 2)}`;
 
-          // Get results from the pair rolloff
-          const dieType = game.settings.get(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.rolloffDie);
+          const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
           const rollPromises = pair.map(async (combatant) => {
             const owner = this._getOwnerUser(combatant);
 
@@ -191,11 +289,12 @@ export class RolloffManager {
 
             try {
               const queryData = { combatantId: combatant.id, dieType, rolloffId: pairRolloffId };
-              const result = await owner.query(`${ROLLIES_CONFIG.moduleId}.requestRoll`, queryData, {
-                timeout: game.settings.get(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.rolloffTimeout) * 1000
+              const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
+                timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000
               });
               return { combatant, roll: Roll.fromData(result.roll), total: result.total };
             } catch (error) {
+              console.error(error);
               const roll = await new Roll(`1${dieType}`).evaluate();
               await this._createAutoRollChatMessage(combatant, roll);
               return { combatant, roll, total: roll.total };
@@ -203,15 +302,12 @@ export class RolloffManager {
           });
 
           const pairResults = await Promise.all(rollPromises);
-
-          // Determine winner of this pair
           const maxTotal = Math.max(...pairResults.map((r) => r.total));
           const winners = pairResults.filter((r) => r.total === maxTotal);
 
           if (winners.length === 1) {
             nextRound.push(winners[0].combatant);
           } else {
-            // Re-roll the tie within this pair
             ui.notifications.info(game.i18n.localize('Rollies.Messages.AnotherTie'));
             const subPairId = `${pairRolloffId}-reroll`;
             await this._conductPairRolloff(
@@ -219,13 +315,9 @@ export class RolloffManager {
               winners.map((w) => w.combatant),
               subPairId
             );
-            // Note: The winner will be applied to initiative, so we can just advance both
-            // and let the next check handle it, or we need to track the winner
-            // For simplicity in brackets, let's advance the first one
             nextRound.push(winners[0].combatant);
           }
         } else {
-          // Odd one out, gets a bye
           nextRound.push(currentRound[i]);
         }
       }
@@ -239,12 +331,19 @@ export class RolloffManager {
     }
   }
 
+  /**
+   * Resolve a rolloff by determining the winner
+   * @param {Combat} combat - The combat encounter
+   * @param {Array<CombatantRollResult>} results - Array of roll results
+   * @param {string} rolloffId - Unique rolloff identifier
+   * @returns {Promise<void>}
+   */
   static async _resolveRolloff(combat, results, rolloffId) {
     const maxTotal = Math.max(...results.map((r) => r.total));
     const winners = results.filter((r) => r.total === maxTotal);
 
     console.log(
-      'Rollies | Resolving rolloff. Max total:',
+      `${MODULE.ID} | Resolving rolloff. Max total:`,
       maxTotal,
       'Winners:',
       winners.map((w) => w.combatant.name)
@@ -253,7 +352,7 @@ export class RolloffManager {
     if (winners.length > 1) {
       ui.notifications.info(game.i18n.localize('Rollies.Messages.AnotherTie'));
       const tiedCombatants = winners.map((w) => w.combatant);
-      console.log('Rollies | Another tie detected, starting exploding rolloff');
+      console.log(`${MODULE.ID} | Another tie detected, starting exploding rolloff`);
       await this._conductPairRolloff(combat, tiedCombatants, `${rolloffId}-explode`);
       return;
     }
@@ -261,9 +360,15 @@ export class RolloffManager {
     await this._applyRolloffWinner(combat, winners[0].combatant);
   }
 
-  static async _applyRolloffWinner(combat, winner) {
-    const newInitiative = winner.initiative + 0.01; // Small increment to break the tie
-    console.log(`Rollies | Applying winner: ${winner.name}, new initiative: ${newInitiative}`);
+  /**
+   * Apply the rolloff winner by updating their initiative
+   * @param {Combat} _combat - The combat encounter
+   * @param {Combatant} winner - The winning combatant
+   * @returns {Promise<void>}
+   */
+  static async _applyRolloffWinner(_combat, winner) {
+    const newInitiative = winner.initiative + 0.01;
+    console.log(`${MODULE.ID} | Applying winner: ${winner.name}, new initiative: ${newInitiative}`);
 
     await winner.update({ initiative: newInitiative });
     await this._createWinnerChatMessage(winner, newInitiative);
@@ -274,30 +379,40 @@ export class RolloffManager {
       initiative: newInitiative
     };
 
-    // Notify all users
     for (const user of game.users) {
       if (user.active) {
         try {
-          await user.query(`${ROLLIES_CONFIG.moduleId}.showWinner`, { winner: winnerData }, { timeout: 5000 });
+          await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
         } catch (error) {
-          console.warn(`Rollies | Could not show winner to ${user.name}:`, error.message);
+          console.warn(`${MODULE.ID} | Could not show winner to ${user.name}:`, error.message);
         }
       }
     }
   }
 
+  /**
+   * Get the owner user for a combatant
+   * @param {Combatant} combatant - The combatant
+   * @returns {User|null} The owner user or null if none found
+   */
   static _getOwnerUser(combatant) {
     if (!combatant.actor) return null;
     return game.users.find((user) => user.active && !user.isGM && combatant.actor.testUserPermission(user, 'OWNER'));
   }
 
+  /**
+   * Create a chat message for an automatic roll
+   * @param {Combatant} combatant - The combatant who was auto-rolled for
+   * @param {Roll} roll - The Roll object
+   * @returns {Promise<ChatMessage>} The created chat message
+   */
   static async _createAutoRollChatMessage(combatant, roll) {
     const content = `<div class="rollies-roll-message">
       <strong>${combatant.name}</strong> ${game.i18n.localize('Rollies.Chat.RolledFor')} ${game.i18n.localize('Rollies.Chat.Rolloff')}:
       ${roll.total} (${game.i18n.localize('Rollies.Chat.AutoRoll')})
     </div>`;
 
-    await ChatMessage.create({
+    return await ChatMessage.create({
       content: content,
       speaker: ChatMessage.getSpeaker({ actor: combatant.actor }),
       style: CONST.CHAT_MESSAGE_STYLES.OTHER,
@@ -305,6 +420,12 @@ export class RolloffManager {
     });
   }
 
+  /**
+   * Create a chat message announcing the rolloff winner
+   * @param {Combatant} winner - The winning combatant
+   * @param {number} newInitiative - The winner's new initiative value
+   * @returns {Promise<ChatMessage>} The created chat message
+   */
   static async _createWinnerChatMessage(winner, newInitiative) {
     const content = `<div class="rollies-winner-message">
       <h3>${game.i18n.localize('Rollies.Chat.WinnerAnnouncement')}</h3>
@@ -312,18 +433,29 @@ export class RolloffManager {
       <p>${game.i18n.localize('Rollies.Chat.NewInitiative')}: ${newInitiative.toFixed(2)}</p>
     </div>`;
 
-    await ChatMessage.create({
+    return await ChatMessage.create({
       content: content,
       speaker: ChatMessage.getSpeaker(),
       style: CONST.CHAT_MESSAGE_STYLES.OTHER
     });
   }
 
+  /**
+   * Notify GM of ties via dialog
+   * @param {Combat} combat - The combat encounter
+   * @param {Array<Array<Combatant>>} tieGroups - Array of tie groups
+   */
   static _notifyGMOfTies(combat, tieGroups) {
     const dialog = new GMNotificationDialog(combat, tieGroups);
     dialog.render(true);
   }
 
+  /**
+   * Manually start rolloffs for tie groups
+   * Called when GM manually triggers rolloffs from notification dialog
+   * @param {Combat} combat - The combat encounter
+   * @param {Array<Array<Combatant>>} tieGroups - Array of tie groups
+   */
   static manuallyStartRolloffs(combat, tieGroups) {
     tieGroups.forEach((group) => this._startRolloffForGroup(combat, group));
   }

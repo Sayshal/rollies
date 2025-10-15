@@ -1,18 +1,28 @@
+/**
+ * Main Rollies module initialization
+ * @module rollies
+ */
+
 import { RolloffManager } from './rolloff-manager.mjs';
 import { registerSettings } from './settings.mjs';
 import { registerQueries } from './queries.mjs';
-import { ROLLIES_CONFIG } from './config.mjs';
+import { MODULE } from './config.mjs';
 
 /**
- * Main Rollies module initialization
+ * Initialize the Rollies module on Foundry's init hook
+ * Registers settings and initializes the rolloff manager
  */
 Hooks.once('init', () => {
-  console.log('Rollies | Initializing module');
+  console.log(`${MODULE.ID} | Initializing module`);
   registerSettings();
   RolloffManager.initialize();
 });
 
+/**
+ * Finalize module setup on Foundry's ready hook
+ * Registers query handlers for inter-client communication
+ */
 Hooks.once('ready', () => {
-  console.log('Rollies | Module ready');
+  console.log(`${MODULE.ID} | Module ready`);
   registerQueries();
 });

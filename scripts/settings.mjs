@@ -1,10 +1,16 @@
-import { ROLLIES_CONFIG } from './config.mjs';
+/**
+ * Module settings registration and management
+ * @module settings
+ */
+
+import { MODULE, getDieTypes } from './config.mjs';
 
 /**
- * Register all module settings
+ * Register all module settings with Foundry VTT
+ * Configures world-level settings for rolloff behavior
  */
 export function registerSettings() {
-  game.settings.register(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.autoRolloff, {
+  game.settings.register(MODULE.ID, MODULE.SETTINGS.AUTO_ROLLOFF, {
     name: game.i18n.localize('Rollies.Settings.AutoRolloff.Name'),
     hint: game.i18n.localize('Rollies.Settings.AutoRolloff.Hint'),
     scope: 'world',
@@ -13,24 +19,17 @@ export function registerSettings() {
     default: true
   });
 
-  game.settings.register(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.rolloffDie, {
+  game.settings.register(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE, {
     name: game.i18n.localize('Rollies.Settings.RolloffDie.Name'),
     hint: game.i18n.localize('Rollies.Settings.RolloffDie.Hint'),
     scope: 'world',
     config: true,
     type: String,
-    choices: {
-      d4: 'd4',
-      d6: 'd6',
-      d8: 'd8',
-      d10: 'd10',
-      d12: 'd12',
-      d20: 'd20'
-    },
+    choices: getDieTypes(),
     default: 'd20'
   });
 
-  game.settings.register(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.includeNPCs, {
+  game.settings.register(MODULE.ID, MODULE.SETTINGS.INCLUDE_NPCS, {
     name: game.i18n.localize('Rollies.Settings.IncludeNPCs.Name'),
     hint: game.i18n.localize('Rollies.Settings.IncludeNPCs.Hint'),
     scope: 'world',
@@ -39,7 +38,7 @@ export function registerSettings() {
     default: false
   });
 
-  game.settings.register(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.rolloffTimeout, {
+  game.settings.register(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT, {
     name: game.i18n.localize('Rollies.Settings.RolloffTimeout.Name'),
     hint: game.i18n.localize('Rollies.Settings.RolloffTimeout.Hint'),
     scope: 'world',
@@ -49,7 +48,7 @@ export function registerSettings() {
     range: { min: 3, max: 60, step: 1 }
   });
 
-  game.settings.register(ROLLIES_CONFIG.moduleId, ROLLIES_CONFIG.settings.showWinnerAnnouncement, {
+  game.settings.register(MODULE.ID, MODULE.SETTINGS.SHOW_WINNER_ANNOUNCEMENT, {
     name: game.i18n.localize('Rollies.Settings.ShowWinnerAnnouncement.Name'),
     hint: game.i18n.localize('Rollies.Settings.ShowWinnerAnnouncement.Hint'),
     scope: 'world',
