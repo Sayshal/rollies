@@ -27,31 +27,21 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * @extends {HandlebarsApplicationMixin(ApplicationV2)}
  */
 export class GMNotificationDialog extends HandlebarsApplicationMixin(ApplicationV2) {
-  /**
-   * Default application options
-   * @type {object}
-   */
+  /** @inheritdoc */
   static DEFAULT_OPTIONS = {
     id: 'rollies-gm-notification',
     classes: ['rollies-dialog', 'rollies-gm-notification'],
-    tag: 'form',
+    tag: 'div',
     position: { width: 400, height: 'auto' },
-    window: { resizable: false },
-    actions: {
-      startRolloffs: GMNotificationDialog._onStartRolloffs,
-      keepInitiative: GMNotificationDialog._onKeepInitiative
-    }
+    window: { resizable: false, title: 'Rollies.GMDialog.Title' },
+    actions: { startRolloffs: GMNotificationDialog.#startRolloffs }
   };
 
   /**
    * Template parts configuration
    * @type {object}
    */
-  static PARTS = {
-    form: {
-      template: 'modules/rollies/templates/gm-notification.hbs'
-    }
-  };
+  static PARTS = { div: { template: 'modules/rollies/templates/gm-notification.hbs' } };
 
   /**
    * Create a new GMNotificationDialog
@@ -64,59 +54,24 @@ export class GMNotificationDialog extends HandlebarsApplicationMixin(Application
     this.tieGroups = tieGroups;
   }
 
-  /**
-   * Get the localized title for this dialog
-   * @returns {string} The dialog title
-   */
-  get title() {
-    return game.i18n.localize('Rollies.GMDialog.Title');
-  }
-
-  /**
-   * Prepare context data for template rendering
-   * @returns {Promise<GMNotificationContext>} Context data for the template
-   */
-  async _prepareContext() {
-    const tieData = this.tieGroups.map((group) => ({
-      initiative: group[0].initiative,
-      combatants: group.map((c) => ({
-        name: c.name,
-        img: c.img || c.actor?.img || 'icons/svg/mystery-man.svg'
-      }))
-    }));
-
-    return {
-      ties: tieData,
-      totalTies: this.tieGroups.length,
-      totalCombatants: this.tieGroups.reduce((sum, group) => sum + group.length, 0)
-    };
+  /** @inheritdoc */
+  async _prepareContext(options) {
+    const context = await super._prepareContext(options);
+    context.tieData = this.tieGroups.map((group) => ({ initiative: group[0].initiative, combatants: group.map((c) => ({ name: c.name, img: c.img || c.actor?.img })) }));
+    context.totalTies = this.tieGroups.length;
+    context.totalCombatants = this.tieGroups.reduce((sum, group) => sum + group.length, 0);
+    return context;
   }
 
   /**
    * Handle start rolloffs button click
    * @param {Event} _event - The click event
    * @param {HTMLElement} _target - The clicked element
+   * @private
    * @returns {Promise<void>}
    */
-  static async _onStartRolloffs(_event, _target) {
-    const app = foundry.applications.instances.get('rollies-gm-notification');
-
-    if (app instanceof GMNotificationDialog) {
-      RolloffManager.manuallyStartRolloffs(app.combat, app.tieGroups);
-      app.close();
-    }
-  }
-
-  /**
-   * Handle keep initiative button click
-   * @param {Event} _event - The click event
-   * @param {HTMLElement} _target - The clicked element
-   */
-  static _onKeepInitiative(_event, _target) {
-    const app = foundry.applications.instances.get('rollies-gm-notification');
-
-    if (app instanceof GMNotificationDialog) {
-      app.close();
-    }
+  static async #startRolloffs(_event, _target) {
+    RolloffManager.manuallyStartRolloffs(this.combat, this.tieGroups);
+    this.close();
   }
 }

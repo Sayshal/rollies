@@ -24,31 +24,21 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * @extends {HandlebarsApplicationMixin(ApplicationV2)}
  */
 export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) {
-  /**
-   * Default application options
-   * @type {object}
-   */
+  /** @inheritdoc */
   static DEFAULT_OPTIONS = {
     id: 'rollies-player-roll-dialog',
     classes: ['rollies-dialog', 'rollies-player-roll'],
     tag: 'form',
     position: { width: 400, height: 'auto' },
-    window: { resizable: false, minimizable: false },
-    actions: {
-      roll: PlayerRollDialog._onRoll,
-      close: PlayerRollDialog._onClose
-    }
+    window: { resizable: false, minimizable: false, title: 'Rollies.PlayerDialog.Title' },
+    actions: { roll: PlayerRollDialog._onRoll }
   };
 
   /**
    * Template parts configuration
    * @type {object}
    */
-  static PARTS = {
-    form: {
-      template: 'modules/rollies/templates/player-roll-dialog.hbs'
-    }
-  };
+  static PARTS = { form: { template: 'modules/rollies/templates/player-roll-dialog.hbs' } };
 
   /**
    * Create a new PlayerRollDialog
@@ -60,8 +50,6 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    */
   constructor(combatant, dieType, rolloffId, resolveCallback, rejectCallback) {
     super();
-    console.log(`${MODULE.ID} | PlayerRollDialog constructor called`, { combatant: combatant.name, dieType, rolloffId });
-
     this.combatant = combatant;
     this.dieType = dieType;
     this.rolloffId = rolloffId;
@@ -69,40 +57,22 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.rejectCallback = rejectCallback;
     this.hasRolled = false;
     this.isClosed = false;
-
     const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
     this.timeoutId = setTimeout(() => {
-      console.log(`${MODULE.ID} | PlayerRollDialog timeout triggered`);
       this._handleTimeout();
     }, timeoutSeconds * 1000);
-
     console.log(`${MODULE.ID} | PlayerRollDialog will timeout in ${timeoutSeconds} seconds`);
   }
 
-  /**
-   * Get the localized title for this dialog
-   * @returns {string} The dialog title
-   */
-  get title() {
-    return game.i18n.localize('Rollies.PlayerDialog.Title');
-  }
-
-  /**
-   * Prepare context data for template rendering
-   * @returns {Promise<PlayerRollContext>} Context data for the template
-   */
-  async _prepareContext() {
-    console.log(`${MODULE.ID} | PlayerRollDialog _prepareContext`);
-    return {
-      combatant: {
-        name: this.combatant.name,
-        img: this.combatant.img || this.combatant.actor?.img || 'icons/svg/mystery-man.svg'
-      },
-      dieType: this.dieType,
-      hasRolled: this.hasRolled,
-      timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT),
-      rolloffId: this.rolloffId
-    };
+  /** @inheritdoc */
+  async _prepareContext(options) {
+    const context = await super._prepareContext(options);
+    context.combatant = { name: this.combatant.name, img: this.combatant.img || this.combatant.actor?.img };
+    context.dieType = this.dieType;
+    context.hasRolled = this.hasRolled;
+    context.timeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+    context.rolloffId = this.rolloffId;
+    return context;
   }
 
   /**
@@ -112,66 +82,25 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    * @returns {Promise<void>}
    */
   static async _onRoll(_event, _target) {
-    console.log(`${MODULE.ID} | PlayerRollDialog roll button clicked`);
-    const app = foundry.applications.instances.get('rollies-player-roll-dialog');
-
-    if (app instanceof PlayerRollDialog) {
-      await app._performRoll();
-    } else {
-      console.error(`${MODULE.ID} | Application instance not found or wrong type`);
-    }
-  }
-
-  /**
-   * Handle close button click action
-   * @param {Event} _event - The click event
-   * @param {HTMLElement} _target - The clicked element
-   */
-  static _onClose(_event, _target) {
-    console.log(`${MODULE.ID} | PlayerRollDialog close button clicked`);
-    const app = foundry.applications.instances.get('rollies-player-roll-dialog');
-
-    if (app instanceof PlayerRollDialog) {
-      app._cleanup(new Error('Dialog closed by user'));
-      app.close();
-    }
-  }
-
-  /**
-   * Perform the actual roll for the combatant
-   * @returns {Promise<void>}
-   */
-  async _performRoll() {
-    console.log(`${MODULE.ID} | _performRoll called`, {
-      hasRolled: this.hasRolled,
-      combatant: this.combatant.name,
-      rolloffId: this.rolloffId
-    });
-
-    if (this.hasRolled || this.isClosed) {
-      console.log(`${MODULE.ID} | Already rolled or closed, ignoring`);
-      return;
-    }
-
+    if (this.hasRolled || this.isClosed) return;
     console.log(`${MODULE.ID} | Performing roll for`, this.combatant.name);
     this.hasRolled = true;
-
     const roll = await new Roll(`1${this.dieType}`).evaluate();
-    console.log(`${MODULE.ID} | Roll result:`, roll.total);
-
     await this._createRollChatMessage(roll);
     await this.render();
-
     setTimeout(() => {
       if (!this.isClosed) {
         this._cleanup();
-        this.resolveCallback({
-          roll: roll,
-          total: roll.total
-        });
+        this.resolveCallback({ roll: roll, total: roll.total });
         this.close();
       }
     }, 1500);
+  }
+
+  /** @inheritdoc */
+  static _onClose(_event, _target) {
+    this._cleanup(new Error('Dialog closed by user'));
+    super.close();
   }
 
   /**
@@ -180,27 +109,12 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    * @returns {Promise<void>}
    */
   async _handleTimeout() {
-    console.log(`${MODULE.ID} | _handleTimeout called`, {
-      hasRolled: this.hasRolled,
-      combatant: this.combatant.name,
-      rolloffId: this.rolloffId
-    });
-
-    if (this.hasRolled || this.isClosed) {
-      console.log(`${MODULE.ID} | Timeout triggered but already rolled or closed`);
-      return;
-    }
-
+    if (this.hasRolled || this.isClosed) return;
     console.log(`${MODULE.ID} | Timeout - auto-rolling for`, this.combatant.name);
     const roll = await new Roll(`1${this.dieType}`).evaluate();
-    console.log(`${MODULE.ID} | Auto-roll result:`, roll.total);
-
     await this._createRollChatMessage(roll, true);
     this._cleanup();
-    this.resolveCallback({
-      roll: roll,
-      total: roll.total
-    });
+    this.resolveCallback({ roll: roll, total: roll.total });
     this.close();
   }
 
@@ -216,13 +130,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
       <strong>${this.combatant.name}</strong> ${game.i18n.localize('Rollies.Chat.RolledFor')} ${game.i18n.localize('Rollies.Chat.Rolloff')}:
       ${roll.total}${autoText}
     </div>`;
-
-    return await ChatMessage.create({
-      content: content,
-      speaker: ChatMessage.getSpeaker({ actor: this.combatant.actor }),
-      style: CONST.CHAT_MESSAGE_STYLES.OTHER,
-      rolls: [roll]
-    });
+    return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker({ actor: this.combatant.actor }), style: CONST.CHAT_MESSAGE_STYLES.OTHER, rolls: [roll] });
   }
 
   /**
@@ -231,26 +139,11 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    * @param {Error} [error=null] - Optional error to reject with
    */
   _cleanup(error = null) {
-    console.log(`${MODULE.ID} | Cleaning up PlayerRollDialog`);
     this.isClosed = true;
-
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
       this.timeoutId = null;
     }
-
-    if (error && this.rejectCallback) {
-      this.rejectCallback(error);
-    }
-  }
-
-  /**
-   * Override close to ensure cleanup happens
-   * @param {object} [options={}] - Close options
-   * @returns {Promise<void>}
-   */
-  async close(options = {}) {
-    this._cleanup();
-    return super.close(options);
+    if (error && this.rejectCallback) this.rejectCallback(error);
   }
 }

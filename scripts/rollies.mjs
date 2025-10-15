@@ -13,9 +13,9 @@ import { MODULE } from './config.mjs';
  * Registers settings and initializes the rolloff manager
  */
 Hooks.once('init', () => {
-  console.log(`${MODULE.ID} | Initializing module`);
   registerSettings();
   RolloffManager.initialize();
+  console.log(`${MODULE.ID} | Initialized`);
 });
 
 /**
@@ -23,6 +23,6 @@ Hooks.once('init', () => {
  * Registers query handlers for inter-client communication
  */
 Hooks.once('ready', () => {
-  console.log(`${MODULE.ID} | Module ready`);
   registerQueries();
+  console.log(`${MODULE.ID} | Module ready`);
 });

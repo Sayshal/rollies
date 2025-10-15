@@ -65,33 +65,13 @@ async function handleRollRequest(queryData, { timeout }) {
   console.log(`${MODULE.ID} | Received roll request:`, queryData);
   const { combatantId, dieType, rolloffId } = queryData;
   const combatant = game.combat?.combatants?.get(combatantId);
-
-  if (!combatant) {
-    throw new Error(`Combatant ${combatantId} not found`);
-  }
-
-  if (!game.user.isGM && !combatant.isOwner) {
-    throw new Error(`User ${game.user.name} cannot roll for ${combatant.name}`);
-  }
-
-  console.log(`${MODULE.ID} | Showing roll dialog for`, combatant.name);
-
-  // Create a promise that will reject if the timeout is exceeded
+  if (!combatant) throw new Error(`Combatant ${combatantId} not found`);
+  if (!game.user.isGM && !combatant.isOwner) throw new Error(`User ${game.user.name} cannot roll for ${combatant.name}`);
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => reject(new Error('Query timeout exceeded')), timeout);
   });
-
-  // Race between the dialog response and the timeout
   const result = await Promise.race([showRollDialog(combatant, dieType, rolloffId, timeout), timeoutPromise]);
-
-  console.log(`${MODULE.ID} | Roll result:`, result);
-
-  return {
-    combatantId,
-    rolloffId,
-    roll: result.roll.toJSON(),
-    total: result.total
-  };
+  return { combatantId, rolloffId, roll: result.roll.toJSON(), total: result.total };
 }
 
 /**
@@ -103,25 +83,20 @@ async function handleRollRequest(queryData, { timeout }) {
 async function handleShowWinner(queryData, { timeout }) {
   const { winner } = queryData;
   const showAnnouncement = game.settings.get(MODULE.ID, MODULE.SETTINGS.SHOW_WINNER_ANNOUNCEMENT);
-
   if (showAnnouncement) {
-    // Use timeout to ensure we don't hang indefinitely
     const timeoutPromise = new Promise((resolve) => {
       setTimeout(() => {
         console.warn(`${MODULE.ID} | Winner announcement dialog timed out`);
         resolve({ acknowledged: true, timedOut: true });
       }, timeout);
     });
-
     const showDialogPromise = (async () => {
       const dialog = new WinnerAnnouncementDialog(winner);
       dialog.render(true);
       return { acknowledged: true };
     })();
-
     return await Promise.race([showDialogPromise, timeoutPromise]);
   }
-
   return { acknowledged: true };
 }
 

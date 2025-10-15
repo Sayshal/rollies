@@ -41,13 +41,7 @@ export const MODULE = {
  */
 export function getDieTypes() {
   const dieTypes = {};
-  const availableDice = CONFIG.Dice?.fulfillment?.dice || {};
-
-  for (const [key, value] of Object.entries(availableDice)) {
-    if (key !== 'd100') {
-      dieTypes[key] = value.label;
-    }
-  }
-
+  const availableDice = CONFIG.Dice?.fulfillment?.dice;
+  for (const [key, value] of Object.entries(availableDice)) dieTypes[key] = value.label;
   return dieTypes;
 }
