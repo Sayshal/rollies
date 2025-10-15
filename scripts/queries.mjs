@@ -4,8 +4,8 @@
  */
 
 import { MODULE } from './config.mjs';
-import { PlayerRollDialog } from './player-roll-dialog.mjs';
-import { WinnerAnnouncementDialog } from './winner-announcement-dialog.mjs';
+import { PlayerRollDialog } from './dialogs/player-roll.mjs';
+import { WinnerAnnouncementDialog } from './dialogs/winner-announcement.mjs';
 
 /**
  * Query data for roll requests
@@ -121,8 +121,9 @@ async function handleShowWinner(queryData, { timeout }) {
  * @returns {Promise<object>} Acknowledgment response
  */
 async function handleRollUpdate(queryData, _options) {
-  console.log(`${MODULE.ID} | Received roll update:`, queryData);
-  Hooks.call(`${MODULE.ID}.rollUpdate`, queryData);
+  console.log(`${MODULE.ID} | 📨 handleRollUpdate received by ${game.user.name}:`, queryData);
+  const hookResult = Hooks.call(`${MODULE.ID}.rollUpdate`, queryData);
+  console.log(`${MODULE.ID} | 🎣 Hooks.call result:`, hookResult);
   return { acknowledged: true };
 }
 

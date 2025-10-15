@@ -3,7 +3,7 @@
  * @module rolloff-manager
  */
 
-import { GMNotificationDialog } from './gm-notification-dialog.mjs';
+import { GMNotificationDialog } from './dialogs/gm-notification.mjs';
 import { MODULE } from './config.mjs';
 
 /**
@@ -236,7 +236,36 @@ export class RolloffManager {
       if (!owner) {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
-        await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
+
+        console.log(`${MODULE.ID} | 🔔 Broadcasting roll (NPC auto-roll):`, {
+          rolloffId,
+          combatantId: combatant.id,
+          combatantName: combatant.name,
+          total: roll.total
+        });
+
+        // ORIGINAL BROADCAST CODE - adding logs
+        for (const user of game.users) {
+          if (user.active && !user.isGM) {
+            try {
+              await user.query(
+                `${MODULE.ID}.rollUpdate`,
+                {
+                  rolloffId,
+                  combatantId: combatant.id,
+                  total: roll.total,
+                  name: combatant.name,
+                  img: combatant.img || combatant.actor?.img
+                },
+                { timeout: 1000 }
+              );
+              console.log(`${MODULE.ID} | ✅ Broadcast sent to ${user.name}`);
+            } catch (err) {
+              console.warn(`${MODULE.ID} | ⚠️ Broadcast failed to ${user.name}:`, err.message);
+            }
+          }
+        }
+
         return { combatant, roll: roll, total: roll.total };
       }
 
@@ -248,16 +277,78 @@ export class RolloffManager {
           mode: 'pair',
           opponents: opponents
         };
+
+        console.log(`${MODULE.ID} | 📤 Requesting roll from ${owner.name} for ${combatant.name}`);
+
         const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
           timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000
         });
-        await this._broadcastRollUpdate(rolloffId, combatant, result.total);
+
+        console.log(`${MODULE.ID} | 📥 Got roll result from ${owner.name}:`, result.total);
+        console.log(`${MODULE.ID} | 🔔 Broadcasting roll (player roll):`, {
+          rolloffId,
+          combatantId: combatant.id,
+          combatantName: combatant.name,
+          total: result.total
+        });
+
+        // ORIGINAL BROADCAST CODE - adding logs
+        for (const user of game.users) {
+          if (user.active && !user.isGM) {
+            try {
+              await user.query(
+                `${MODULE.ID}.rollUpdate`,
+                {
+                  rolloffId,
+                  combatantId: combatant.id,
+                  total: result.total,
+                  name: combatant.name,
+                  img: combatant.img || combatant.actor?.img
+                },
+                { timeout: 1000 }
+              );
+              console.log(`${MODULE.ID} | ✅ Broadcast sent to ${user.name}`);
+            } catch (err) {
+              console.warn(`${MODULE.ID} | ⚠️ Broadcast failed to ${user.name}:`, err.message);
+            }
+          }
+        }
+
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
       } catch (error) {
         console.warn(`${MODULE.ID} | Player ${owner.name} failed to respond (${error.message}), auto-rolling`);
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
-        await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
+
+        console.log(`${MODULE.ID} | 🔔 Broadcasting roll (timeout auto-roll):`, {
+          rolloffId,
+          combatantId: combatant.id,
+          combatantName: combatant.name,
+          total: roll.total
+        });
+
+        // ORIGINAL BROADCAST CODE - adding logs
+        for (const user of game.users) {
+          if (user.active && !user.isGM) {
+            try {
+              await user.query(
+                `${MODULE.ID}.rollUpdate`,
+                {
+                  rolloffId,
+                  combatantId: combatant.id,
+                  total: roll.total,
+                  name: combatant.name,
+                  img: combatant.img || combatant.actor?.img
+                },
+                { timeout: 1000 }
+              );
+              console.log(`${MODULE.ID} | ✅ Broadcast sent to ${user.name}`);
+            } catch (err) {
+              console.warn(`${MODULE.ID} | ⚠️ Broadcast failed to ${user.name}:`, err.message);
+            }
+          }
+        }
+
         return { combatant, roll: roll, total: roll.total };
       }
     });

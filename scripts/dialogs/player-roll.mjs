@@ -67,7 +67,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.bracket = bracket;
     this.hasRolled = false;
     this.isClosed = false;
-    this.opponentRolls = new Map(); // Track opponent rolls
+    this.opponentRolls = new Map();
 
     const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
     this.timeRemaining = timeoutSeconds;
@@ -82,7 +82,14 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     // Register hook to listen for roll updates
     this.hookId = Hooks.on(`${MODULE.ID}.rollUpdate`, this._onRollUpdate.bind(this));
 
-    console.log(`${MODULE.ID} | PlayerRollDialog created in ${mode} mode`);
+    console.log(`${MODULE.ID} | 🎭 PlayerRollDialog created:`, {
+      player: game.user.name,
+      combatantName: combatant.name,
+      combatantId: combatant.id,
+      rolloffId,
+      mode,
+      hookId: this.hookId
+    });
   }
 
   /**
@@ -91,10 +98,23 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    * @private
    */
   _onRollUpdate(data) {
-    // Check if this update is for our rolloff
-    if (data.rolloffId !== this.rolloffId && !data.rolloffId.startsWith(this.rolloffId)) return;
+    console.log(`${MODULE.ID} | 🎣 _onRollUpdate called for ${game.user.name}:`, {
+      myDialog: {
+        combatantId: this.combatant.id,
+        combatantName: this.combatant.name,
+        rolloffId: this.rolloffId,
+        mode: this.mode
+      },
+      receivedData: data
+    });
 
-    console.log(`${MODULE.ID} | Received roll update:`, data);
+    // Check if this update is for our rolloff
+    if (data.rolloffId !== this.rolloffId && !data.rolloffId.startsWith(this.rolloffId)) {
+      console.log(`${MODULE.ID} | ⏭️ Skipping - rolloffId mismatch (${data.rolloffId} vs ${this.rolloffId})`);
+      return;
+    }
+
+    console.log(`${MODULE.ID} | ✅ RolloffId matches, processing update`);
 
     // Store with matchId-combatantId key to track rolls per match
     const rollKey = `${data.rolloffId}-${data.combatantId}`;
@@ -104,8 +124,20 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
       img: data.img
     });
 
+    console.log(`${MODULE.ID} | 💾 Stored roll:`, {
+      key: rollKey,
+      total: data.total,
+      mapSize: this.opponentRolls.size,
+      allKeys: Array.from(this.opponentRolls.keys())
+    });
+
     // Re-render to show opponent's roll
-    if (this.rendered) this.render();
+    if (this.rendered) {
+      console.log(`${MODULE.ID} | 🔄 Triggering re-render`);
+      this.render();
+    } else {
+      console.warn(`${MODULE.ID} | ⚠️ Dialog not rendered, cannot re-render`);
+    }
   }
 
   /**
