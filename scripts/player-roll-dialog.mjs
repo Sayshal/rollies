@@ -16,6 +16,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * @property {string} dieType - Die type to roll
  * @property {boolean} hasRolled - Whether the player has rolled
  * @property {number} timeout - Timeout duration in seconds
+ * @property {number} timeRemaining - Seconds remaining in countdown
  * @property {string} rolloffId - Unique rolloff identifier
  */
 
@@ -58,10 +59,46 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.hasRolled = false;
     this.isClosed = false;
     const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+    this.timeRemaining = timeoutSeconds;
+    this.startTime = Date.now();
+    this.countdownInterval = setInterval(() => {
+      this._updateCountdown();
+    }, 1000);
     this.timeoutId = setTimeout(() => {
       this._handleTimeout();
     }, timeoutSeconds * 1000);
     console.log(`${MODULE.ID} | PlayerRollDialog will timeout in ${timeoutSeconds} seconds`);
+  }
+
+  /**
+   * Update the countdown timer
+   * Re-renders the dialog to show updated time
+   * @private
+   */
+  _updateCountdown() {
+    if (this.hasRolled || this.isClosed) {
+      this._clearCountdown();
+      return;
+    }
+    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+    const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+    this.timeRemaining = Math.max(0, timeoutSeconds - elapsed);
+    const countdownElement = this.element?.querySelector('.countdown-timer');
+    const warningElement = this.element?.querySelector('.timeout-warning');
+    if (countdownElement) countdownElement.textContent = this.timeRemaining;
+    if (warningElement && this.timeRemaining <= 5) warningElement.classList.add('urgent');
+    if (this.timeRemaining === 0) this._clearCountdown();
+  }
+
+  /**
+   * Clear the countdown interval
+   * @private
+   */
+  _clearCountdown() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
   }
 
   /** @inheritdoc */
@@ -71,6 +108,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     context.dieType = this.dieType;
     context.hasRolled = this.hasRolled;
     context.timeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+    context.timeRemaining = this.timeRemaining;
     context.rolloffId = this.rolloffId;
     return context;
   }
@@ -85,6 +123,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     if (this.hasRolled || this.isClosed) return;
     console.log(`${MODULE.ID} | Performing roll for`, this.combatant.name);
     this.hasRolled = true;
+    this._clearCountdown();
     const roll = await new Roll(`1${this.dieType}`).evaluate();
     await this._createRollChatMessage(roll);
     await this.render();
@@ -111,6 +150,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   async _handleTimeout() {
     if (this.hasRolled || this.isClosed) return;
     console.log(`${MODULE.ID} | Timeout - auto-rolling for`, this.combatant.name);
+    this._clearCountdown();
     const roll = await new Roll(`1${this.dieType}`).evaluate();
     await this._createRollChatMessage(roll, true);
     this._cleanup();
@@ -135,7 +175,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
 
   /**
    * Clean up dialog resources
-   * Clears timeout and marks as closed
+   * Clears timeout, countdown, and marks as closed
    * @param {Error} [error=null] - Optional error to reject with
    */
   _cleanup(error = null) {
@@ -144,6 +184,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
       clearTimeout(this.timeoutId);
       this.timeoutId = null;
     }
+    this._clearCountdown();
     if (error && this.rejectCallback) this.rejectCallback(error);
   }
 }

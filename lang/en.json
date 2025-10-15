@@ -1,76 +1,75 @@
 {
   "Rollies": {
-    "Settings": {
-      "AutoRolloff": {
-        "Name": "Auto-trigger Rolloffs",
-        "Hint": "Automatically start rolloffs when initiative ties are detected"
-      },
-      "RolloffDie": {
-        "Name": "Rolloff Die Type",
-        "Hint": "The type of die used for initiative rolloffs"
-      },
-      "IncludeNPCs": {
-        "Name": "Include NPCs in Rolloffs",
-        "Hint": "Whether NPCs should participate in initiative rolloffs alongside characters"
-      },
-      "RolloffTimeout": {
-        "Name": "Rolloff Timeout (seconds)",
-        "Hint": "How long to wait before automatically rolling for inactive players"
-      },
-      "ShowWinnerAnnouncement": {
-        "Name": "Show Winner Announcements",
-        "Hint": "Display a popup announcement when someone wins a rolloff"
-      }
+    "Chat": {
+      "AutoRoll": "auto-rolled",
+      "RolledFor": "rolled for",
+      "Rolloff": "rolloff",
+      "WinnerAnnouncement": "🎉 Rolloff Winner!",
+      "WinsRolloff": "wins the initiative rolloff!"
     },
     "Dialog": {
-      "Title": "Initiative Rolloff",
+      "CloseButton": "Close",
+      "Complete": "Rolloff complete! Determining winner...",
       "Header": "Initiative Tie Detected!",
       "Instructions": "Roll {die} to break the tie",
       "RollButton": "Roll",
       "Rolled": "Rolled",
-      "Waiting": "Waiting...",
-      "Complete": "Rolloff complete! Determining winner...",
       "TimeoutWarning": "Auto-rolling in {timeout} seconds for inactive players",
-      "CloseButton": "Close"
-    },
-    "PlayerDialog": {
       "Title": "Initiative Rolloff",
-      "Header": "Initiative Rolloff Required!",
-      "Instructions": "Roll {die} to break the initiative tie",
-      "RollFor": "Roll for initiative:",
-      "RollButton": "Roll Dice",
-      "RollComplete": "Roll completed! Waiting for results...",
-      "TimeoutWarning": "Auto-rolling in {timeout} seconds",
-      "CloseButton": "Close"
+      "Waiting": "Waiting..."
     },
     "GMDialog": {
-      "Title": "Initiative Ties Detected",
-      "Header": "Initiative Ties Found",
       "Description": "Found {count} initiative tie(s). What would you like to do?",
+      "Header": "Initiative Ties Found",
       "Initiative": "Initiative",
+      "KeepInitiative": "Keep Current Initiative",
       "StartRolloffs": "Start Rolloffs",
-      "KeepInitiative": "Keep Current Initiative"
-    },
-    "WinnerDialog": {
-      "Title": "Rolloff Winner!",
-      "Header": "🎉 Rolloff Winner! 🎉",
-      "WinsRolloff": "wins the rolloff!",
-      "NewInitiative": "New Initiative",
-      "CloseButton": "Awesome!"
-    },
-    "Chat": {
-      "WinnerAnnouncement": "🎉 Rolloff Winner!",
-      "WinsRolloff": "wins the initiative rolloff!",
-      "NewInitiative": "New Initiative",
-      "RolledFor": "rolled for",
-      "Rolloff": "rolloff",
-      "AutoRoll": "auto-rolled"
+      "Title": "Initiative Ties Detected"
     },
     "Messages": {
       "AnotherTie": "The rolloff resulted in another tie! Rolling again..."
     },
+    "PlayerDialog": {
+      "CloseButton": "Close",
+      "Header": "Initiative Rolloff Required!",
+      "Instructions": "Roll {die} to break the initiative tie",
+      "RollButton": "Roll Dice",
+      "RollComplete": "Roll completed! Waiting for results...",
+      "RollFor": "Roll for initiative:",
+      "TimeoutSeconds": "seconds",
+      "TimeoutWarning": "Auto-rolling in",
+      "Title": "Initiative Rolloff"
+    },
+    "Settings": {
+      "AutoRolloff": {
+        "Hint": "Automatically start rolloffs when initiative ties are detected",
+        "Name": "Auto-trigger Rolloffs"
+      },
+      "IncludeNPCs": {
+        "Hint": "Whether NPCs should participate in initiative rolloffs alongside characters",
+        "Name": "Include NPCs in Rolloffs"
+      },
+      "RolloffDie": {
+        "Hint": "The type of die used for initiative rolloffs",
+        "Name": "Rolloff Die Type"
+      },
+      "RolloffTimeout": {
+        "Hint": "How long to wait before automatically rolling for inactive players",
+        "Name": "Rolloff Timeout (seconds)"
+      },
+      "ShowWinnerAnnouncement": {
+        "Hint": "Display a popup announcement when someone wins a rolloff",
+        "Name": "Show Winner Announcements"
+      }
+    },
     "Warnings": {
       "CannotRoll": "You don't have permission to roll for this combatant"
+    },
+    "WinnerDialog": {
+      "CloseButton": "Awesome!",
+      "Header": "🎉 Rolloff Winner! 🎉",
+      "Title": "Rolloff Winner!",
+      "WinsRolloff": "wins the rolloff!"
     }
   }
 }

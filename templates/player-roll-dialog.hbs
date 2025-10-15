@@ -17,7 +17,10 @@
       <button type='button' data-action='roll' class='roll-button'>
         {{localize 'Rollies.PlayerDialog.RollButton'}}
       </button>
-      <p class='timeout-warning'>{{localize 'Rollies.PlayerDialog.TimeoutWarning' timeout=timeout}}</p>
+      <p class='timeout-warning{{#if (lt timeRemaining 6)}} urgent{{/if}}'>
+        {{localize 'Rollies.PlayerDialog.TimeoutWarning'}} <span class='countdown-timer'>{{timeRemaining}}</span>
+        {{localize 'Rollies.PlayerDialog.TimeoutSeconds'}}
+      </p>
     </div>
   {{else}}
     <div class='roll-complete'>

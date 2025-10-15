@@ -328,10 +328,9 @@ export class RolloffManager {
    */
   static async _createWinnerChatMessage(winner, newInitiative) {
     const content = `<div class="rollies-winner-message">
-      <h3>${game.i18n.localize('Rollies.Chat.WinnerAnnouncement')}</h3>
-      <p><strong>${winner.name}</strong> ${game.i18n.localize('Rollies.Chat.WinsRolloff')}</p>
-      <p>${game.i18n.localize('Rollies.Chat.NewInitiative')}: ${newInitiative.toFixed(2)}</p>
-    </div>`;
+    <h3>${game.i18n.localize('Rollies.Chat.WinnerAnnouncement')}</h3>
+    <p><strong>${winner.name}</strong> ${game.i18n.localize('Rollies.Chat.WinsRolloff')}</p>
+  </div>`;
     return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker(), style: CONST.CHAT_MESSAGE_STYLES.OTHER });
   }
 
