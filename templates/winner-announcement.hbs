@@ -1,4 +1,9 @@
 <div class='rollies-winner-announcement'>
+  {{! Custom close button for frameless window }}
+  <button type='button' data-action='close' class='frameless-close-button' title='Close'>
+    <i class='fas fa-times'></i>
+  </button>
+
   <div class='winner-header'>
     <h2>{{localize 'Rollies.WinnerDialog.Header'}}</h2>
   </div>
@@ -9,11 +14,5 @@
       <h3 class='winner-name'>{{winner.name}}</h3>
       <p class='winner-text'>{{localize 'Rollies.WinnerDialog.WinsRolloff'}}</p>
     </div>
-  </div>
-
-  <div class='dialog-buttons'>
-    <button type='submit' class='close-button'>
-      {{localize 'Rollies.WinnerDialog.CloseButton'}}
-    </button>
   </div>
 </div>

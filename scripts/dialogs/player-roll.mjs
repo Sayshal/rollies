@@ -33,7 +33,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     classes: ['rollies-dialog', 'rollies-player-roll'],
     tag: 'form',
     position: { width: 600, height: 'auto' },
-    window: { resizable: false, minimizable: false, title: 'Rollies.PlayerDialog.Title' },
+    window: { frame: false, positioned: false, resizable: false, minimizable: false, title: 'Rollies.PlayerDialog.Title', contentClasses: ['rollies-frameless-content'] },
     actions: { roll: PlayerRollDialog._onRoll }
   };
 

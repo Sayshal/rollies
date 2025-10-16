@@ -1,76 +1,215 @@
 /* stylelint-disable comment-empty-line-before */
 
 /* ========================================= */
-/*  ROLLIES MODULE STYLES                    */
+/*  ROLLIES MODULE - WEB 3.0 STYLES          */
 /* ========================================= */
+
+/* ----------------------------------------- */
+/*  Frameless Window & Background            */
+/* ----------------------------------------- */
+
+/* Frameless content wrapper with D&D 5e texture background */
+.rollies-frameless-content {
+  background-image: url('../../../systems/dnd5e/ui/texture1.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 1.25rem;
+  padding: 0 !important;
+  overflow: hidden;
+  box-shadow:
+    0 0.5rem 3rem rgb(0 0 0 / 60%),
+    0 0 0 0.125rem rgb(255 255 255 / 10%) inset,
+    0 0 3rem rgb(139 69 19 / 40%);
+  backdrop-filter: blur(0.625rem);
+  position: relative;
+}
+
+/* Add custom close button for frameless windows */
+.rollies-dialog .frameless-close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: rgb(139 0 0 / 40%);
+  backdrop-filter: blur(0.625rem);
+  border: 0.0625rem solid rgb(255 255 255 / 20%);
+  color: rgb(255 220 220);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 40%);
+}
+
+.rollies-dialog .frameless-close-button:hover {
+  background: rgb(220 53 69 / 70%);
+  border-color: rgb(255 255 255 / 40%);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow:
+    0 0.375rem 1rem rgb(220 53 69 / 60%),
+    0 0 1.5rem rgb(220 53 69 / 40%);
+}
 
 /* ----------------------------------------- */
 /*  Base Dialog Styles                       */
 /* ----------------------------------------- */
 .rollies-dialog {
+  font-family: Signika, 'Palatino Linotype', serif;
+
+  /* Center frameless dialogs in viewport */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
   .window-content {
-    padding: 1rem;
+    padding: 0;
   }
 
   .dialog-buttons {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
     justify-content: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 0.0625rem solid rgb(200 200 200 / 50%);
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0%), rgb(0 0 0 / 30%));
+    backdrop-filter: blur(0.3125rem);
   }
 
-  .primary-button {
-    padding: 0.5rem 1rem;
+  .primary-button,
+  .roll-button {
+    padding: 0.75rem 1.75rem;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, rgb(218 165 32), rgb(184 134 11));
+    border: 0.125rem solid rgb(255 215 0 / 50%);
+    border-radius: 0.625rem;
+    color: rgb(255 255 255);
+    text-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 60%);
+    box-shadow:
+      0 0.375rem 1rem rgb(184 134 11 / 50%),
+      0 0 1.5rem rgb(255 215 0 / 30%) inset;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
   }
 
-  .secondary-button {
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: rgb(255 255 255 / 10%);
-    }
+  .primary-button::before,
+  .roll-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 30%), transparent);
+    transition: left 0.5s ease;
   }
 
+  .primary-button:hover::before,
+  .roll-button:hover::before {
+    left: 100%;
+  }
+
+  .primary-button:hover,
+  .roll-button:hover {
+    transform: translateY(-0.125rem) scale(1.05);
+    box-shadow:
+      0 0.625rem 1.5rem rgb(218 165 32 / 70%),
+      0 0 2rem rgb(255 215 0 / 50%) inset;
+    border-color: rgb(255 215 0);
+  }
+
+  .secondary-button,
   .close-button {
-    padding: 0.375rem 0.75rem;
+    padding: 0.625rem 1.25rem;
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: rgb(60 60 60 / 50%);
+    backdrop-filter: blur(0.625rem);
+    border: 0.0625rem solid rgb(255 255 255 / 20%);
+    border-radius: 0.5rem;
+    color: rgb(220 220 220);
+    transition: all 0.3s ease;
+    box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 40%);
+  }
+
+  .secondary-button:hover,
+  .close-button:hover {
+    background: rgb(80 80 80 / 60%);
+    border-color: rgb(255 255 255 / 40%);
+    transform: translateY(-0.0625rem);
+    box-shadow: 0 0.375rem 1rem rgb(0 0 0 / 50%);
   }
 }
 
 /* ----------------------------------------- */
-/*  Versus Mode (1v1)                        */
+/*  Glassmorphism Header Styles              */
+/* ----------------------------------------- */
+.rollies-dialog .rolloff-header,
+.rollies-dialog .tournament-header {
+  text-align: center;
+  padding: 2rem 2rem 1.5rem;
+  background: linear-gradient(180deg, rgb(139 69 19 / 60%), rgb(101 67 33 / 40%), rgb(0 0 0 / 20%));
+  backdrop-filter: blur(0.9375rem);
+  border-bottom: 0.125rem solid rgb(255 215 0 / 30%);
+  box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 40%);
+  position: relative;
+}
+
+.rollies-dialog .rolloff-header::before,
+.rollies-dialog .tournament-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.25rem;
+  background: linear-gradient(90deg, transparent, rgb(255 215 0 / 60%), transparent);
+  box-shadow: 0 0 1rem rgb(255 215 0 / 50%);
+}
+
+.rollies-dialog .rolloff-header h2,
+.rollies-dialog .tournament-header h2 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  color: rgb(255 215 0);
+  text-shadow:
+    0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+    0 0 1rem rgb(255 215 0 / 50%);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rollies-dialog .rolloff-header p,
+.rollies-dialog .tournament-header p {
+  margin: 0;
+  color: rgb(220 200 160);
+  font-size: 1rem;
+  text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 60%);
+}
+
+/* ----------------------------------------- */
+/*  Versus Mode (1v1) - Web 3.0 Edition      */
 /* ----------------------------------------- */
 .versus-mode {
-  .rolloff-header {
-    text-align: center;
-    margin-bottom: 1.5rem;
-
-    h2 {
-      margin: 0 0 0.5rem;
-      font-size: 1.5rem;
-    }
-
-    p {
-      margin: 0;
-      color: rgb(120 120 120);
-    }
-  }
-
   .versus-container {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    gap: 2rem;
+    gap: 2.5rem;
     align-items: center;
-    margin: 1.5rem 0;
+    padding: 2rem;
+    background: linear-gradient(180deg, rgb(0 0 0 / 10%), rgb(0 0 0 / 30%));
+    backdrop-filter: blur(0.3125rem);
   }
 
   .combatant-side {
@@ -80,77 +219,142 @@
 
   .combatant-card {
     text-align: center;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    border: 0.125rem solid rgb(200 200 200 / 50%);
-    background: rgb(0 0 0 / 5%);
-    min-width: 12rem;
+    padding: 2rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, rgb(40 40 40 / 50%), rgb(60 60 60 / 30%));
+    backdrop-filter: blur(1.25rem);
+    border: 0.125rem solid rgb(255 255 255 / 15%);
+    box-shadow:
+      0 0.5rem 2rem rgb(0 0 0 / 50%),
+      0 0 0 0.0625rem rgb(255 255 255 / 10%) inset;
+    min-width: 14rem;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .combatant-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgb(255 255 255 / 5%), transparent 70%);
+    animation: rotate-glow 8s linear infinite;
   }
 
   .my-side .combatant-card {
     border-color: rgb(40 167 69 / 50%);
-    background: rgb(40 167 69 / 5%);
+    background: linear-gradient(135deg, rgb(40 167 69 / 30%), rgb(34 139 58 / 20%));
+    box-shadow:
+      0 0.5rem 2rem rgb(40 167 69 / 40%),
+      0 0 2rem rgb(40 167 69 / 20%) inset,
+      0 0 0 0.0625rem rgb(40 167 69 / 30%) inset;
+  }
+
+  .combatant-card:hover {
+    transform: translateY(-0.3125rem) scale(1.02);
+    box-shadow:
+      0 0.75rem 2.5rem rgb(0 0 0 / 60%),
+      0 0 0 0.125rem rgb(255 255 255 / 20%) inset;
   }
 
   .combatant-image {
-    width: 5rem;
-    height: 5rem;
+    width: 7rem;
+    height: 7rem;
     border-radius: 50%;
-    border: 0.1875rem solid rgb(100 100 100);
-    margin-bottom: 0.75rem;
-    transition: all 0.3s ease;
+    border: 0.25rem solid rgb(100 100 100 / 60%);
+    margin: 0 auto 1rem;
+    transition: all 0.4s ease;
+    box-shadow:
+      0 0.5rem 1.5rem rgb(0 0 0 / 50%),
+      0 0 0 0.25rem rgb(255 255 255 / 10%) inset;
+    position: relative;
+    z-index: 1;
+  }
 
-    &.rolled {
-      border-color: rgb(40 167 69);
-      box-shadow: 0 0 1rem rgb(40 167 69 / 50%);
-    }
+  .combatant-image.rolled {
+    border-color: rgb(255 215 0);
+    box-shadow:
+      0 0 2rem rgb(255 215 0 / 70%),
+      0 0.5rem 1.5rem rgb(0 0 0 / 50%),
+      0 0 0 0.25rem rgb(255 215 0 / 50%) inset;
+    animation: pulse-glow 2s ease-in-out infinite;
   }
 
   .combatant-name {
-    margin: 0 0 0.25rem;
-    font-size: 1.1rem;
-    font-weight: bold;
+    margin: 0 0 0.5rem;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: rgb(255 255 255);
+    text-shadow:
+      0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+      0 0 0.75rem rgb(255 255 255 / 30%);
+    position: relative;
+    z-index: 1;
   }
 
   .side-label {
-    margin: 0 0 0.75rem;
-    font-size: 0.9rem;
-    color: rgb(120 120 120);
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    color: rgb(180 180 180);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
   }
 
   .roll-display {
-    margin-top: 0.75rem;
-    padding: 0.5rem;
-    background: rgb(40 167 69 / 10%);
-    border-radius: 0.25rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgb(40 167 69 / 30%), rgb(34 139 58 / 20%));
+    backdrop-filter: blur(0.625rem);
+    border-radius: 0.75rem;
+    border: 0.125rem solid rgb(40 167 69 / 40%);
+    box-shadow:
+      0 0.25rem 1rem rgb(40 167 69 / 30%),
+      0 0 1.5rem rgb(40 167 69 / 20%) inset;
+    position: relative;
+    z-index: 1;
 
     .roll-label {
       display: block;
       font-size: 0.8rem;
-      color: rgb(120 120 120);
-      margin-bottom: 0.25rem;
+      color: rgb(180 220 190);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
     .roll-value {
       display: block;
-      font-size: 2rem;
-      font-weight: bold;
-      color: rgb(40 167 69);
+      font-size: 3rem;
+      font-weight: 900;
+      color: rgb(144 238 144);
+      text-shadow:
+        0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+        0 0 1.5rem rgb(144 238 144 / 60%);
+      animation: number-appear 0.5s ease-out;
     }
   }
 
   .waiting-indicator {
-    margin-top: 0.75rem;
-    padding: 0.5rem;
-    background: rgb(255 193 7 / 10%);
-    border-radius: 0.25rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgb(255 193 7 / 20%);
+    backdrop-filter: blur(0.625rem);
+    border-radius: 0.75rem;
+    border: 0.125rem solid rgb(255 193 7 / 30%);
+    position: relative;
+    z-index: 1;
 
     .waiting-text {
-      font-size: 0.9rem;
-      color: rgb(120 120 120);
+      font-size: 1rem;
+      color: rgb(255 220 120);
       font-style: italic;
+      text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 60%);
     }
   }
 
@@ -158,27 +362,46 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
+    position: relative;
 
     .vs-text {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: rgb(220 53 69);
-      text-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 20%);
+      font-size: 3.5rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      background: linear-gradient(180deg, rgb(255 99 99), rgb(220 53 69));
+      background-clip: text;
+      color: transparent;
+      animation: vs-pulse 3s ease-in-out infinite;
     }
 
     .countdown-display {
+      display: flex;
       text-align: center;
+      padding: 1rem 1.5rem;
+      background: rgb(40 40 40 / 60%);
+      backdrop-filter: blur(0.9375rem);
+      border-radius: 1rem;
+      border: 0.125rem solid rgb(255 255 255 / 20%);
+      box-shadow:
+        0 0.5rem 1.5rem rgb(0 0 0 / 50%),
+        0 0 0 0.0625rem rgb(255 255 255 / 10%) inset;
 
       .countdown-timer {
         display: block;
-        font-size: 2rem;
-        font-weight: bold;
-        color: rgb(100 100 100);
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: rgb(200 200 200);
+        text-shadow:
+          0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+          0 0 1rem rgb(200 200 200 / 40%);
 
         &.urgent {
-          color: rgb(220 53 69);
-          animation: pulse 1s ease-in-out infinite;
+          color: rgb(255 99 99);
+          text-shadow:
+            0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+            0 0 2rem rgb(220 53 69 / 80%);
+          animation: pulse-urgent 1s ease-in-out infinite;
         }
       }
     }
@@ -186,285 +409,393 @@
 }
 
 /* ----------------------------------------- */
-/*  Bracket Tournament Dialog                */
+/*  Bracket Tournament - Web 3.0 Edition     */
 /* ----------------------------------------- */
 .rollies-bracket-tournament-dialog {
-  .tournament-header {
-    text-align: center;
-    margin-bottom: 1.5rem;
-
-    h2 {
-      margin: 0 0 0.5rem;
-      font-size: 1.5rem;
-    }
-
-    p {
-      margin: 0;
-      color: rgb(120 120 120);
-    }
-  }
-
   .spectator-notice {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    padding: 0.5rem 1rem;
-    background: rgb(255 193 7 / 15%);
-    border: 0.0625rem solid rgb(255 193 7 / 40%);
-    border-radius: 0.25rem;
-    color: rgb(133 100 4);
-    font-size: 0.95rem;
-    font-weight: 500;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, rgb(255 193 7 / 30%), rgb(255 165 0 / 20%));
+    backdrop-filter: blur(0.9375rem);
+    border: 0.125rem solid rgb(255 193 7 / 50%);
+    border-radius: 0.75rem;
+    color: rgb(255 235 180);
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow:
+      0 0.25rem 1rem rgb(255 193 7 / 30%),
+      0 0 1rem rgb(255 193 7 / 20%) inset;
 
     i {
-      font-size: 1.1rem;
+      font-size: 1.3rem;
+      filter: drop-shadow(0 0 0.5rem rgb(255 193 7));
     }
   }
 
   .bracket-container {
     display: flex;
-    gap: 2rem;
+    gap: 2.5rem;
     overflow-x: auto;
-    padding: 1rem;
+    padding: 2rem;
     margin: 1rem 0;
+    background: linear-gradient(180deg, rgb(0 0 0 / 10%), rgb(0 0 0 / 30%));
+    backdrop-filter: blur(0.3125rem);
+    border-radius: 0 0 1rem 1rem;
+
+    /* Custom scrollbar */
+    &::-webkit-scrollbar {
+      height: 0.75rem;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgb(0 0 0 / 30%);
+      border-radius: 0.375rem;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(90deg, rgb(218 165 32), rgb(184 134 11));
+      border-radius: 0.375rem;
+      box-shadow: 0 0 0.5rem rgb(255 215 0 / 50%);
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(90deg, rgb(255 215 0), rgb(218 165 32));
+    }
   }
 
   .bracket-round {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    min-width: 15rem;
+    gap: 1.5rem;
+    min-width: 18rem;
 
     .round-label {
       text-align: center;
-      margin: 0 0 0.5rem;
-      font-size: 0.9rem;
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
       text-transform: uppercase;
-      color: rgb(120 120 120);
-      letter-spacing: 0.05em;
+      color: rgb(255 215 0);
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      text-shadow:
+        0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+        0 0 0.75rem rgb(255 215 0 / 50%);
     }
   }
 
   .bracket-match {
-    padding: 0.75rem;
-    border: 0.125rem solid rgb(200 200 200 / 50%);
-    border-radius: 0.5rem;
-    background: rgb(0 0 0 / 3%);
+    padding: 1rem;
+    border: 0.125rem solid rgb(255 255 255 / 15%);
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgb(40 40 40 / 50%), rgb(60 60 60 / 30%));
+    backdrop-filter: blur(1.25rem);
+    box-shadow:
+      0 0.375rem 1.5rem rgb(0 0 0 / 50%),
+      0 0 0 0.0625rem rgb(255 255 255 / 10%) inset;
+    transition: all 0.3s ease;
 
     &.active-match {
-      border-color: rgb(40 167 69);
-      background: rgb(40 167 69 / 5%);
+      border-color: rgb(40 167 69 / 70%);
+      background: linear-gradient(135deg, rgb(40 167 69 / 30%), rgb(34 139 58 / 20%));
+      box-shadow:
+        0 0.5rem 2rem rgb(40 167 69 / 50%),
+        0 0 2rem rgb(40 167 69 / 30%) inset;
+      animation: match-glow 2s ease-in-out infinite;
     }
 
     &.my-match:not(.completed-match) {
-      box-shadow: 0 0 0.5rem rgb(40 167 69 / 30%);
+      border-color: rgb(255 215 0 / 50%);
+      box-shadow:
+        0 0.5rem 2rem rgb(255 215 0 / 30%),
+        0 0 1.5rem rgb(255 215 0 / 20%) inset;
     }
 
     &.completed-match {
-      opacity: 0.85;
+      opacity: 0.7;
+      filter: grayscale(30%);
     }
   }
 
   .match-combatant {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
     transition: all 0.3s ease;
+    background: rgb(0 0 0 / 20%);
+    margin-bottom: 0.5rem;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
 
     &.is-me {
-      background: rgb(40 167 69 / 10%);
-      border: 0.0625rem solid rgb(40 167 69 / 30%);
+      background: linear-gradient(90deg, rgb(40 167 69 / 25%), rgb(34 139 58 / 15%));
+      border: 0.0625rem solid rgb(40 167 69 / 40%);
+      box-shadow: 0 0 1rem rgb(40 167 69 / 30%) inset;
     }
 
     &.is-loser {
-      filter: grayscale(100%);
+      filter: grayscale(100%) brightness(0.6);
       opacity: 0.5;
     }
 
     .match-portrait {
-      width: 2.5rem;
-      height: 2.5rem;
+      width: 3rem;
+      height: 3rem;
       border-radius: 50%;
-      border: 0.125rem solid rgb(100 100 100);
+      border: 0.1875rem solid rgb(100 100 100 / 60%);
+      box-shadow:
+        0 0.25rem 0.75rem rgb(0 0 0 / 50%),
+        0 0 0 0.125rem rgb(255 255 255 / 10%) inset;
+      transition: all 0.3s ease;
+    }
+
+    &.is-me .match-portrait {
+      border-color: rgb(40 167 69);
+      box-shadow:
+        0 0 1rem rgb(40 167 69 / 50%),
+        0 0.25rem 0.75rem rgb(0 0 0 / 50%);
     }
 
     .match-info {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.375rem;
 
       .match-name {
-        font-weight: bold;
-        font-size: 0.95rem;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: rgb(255 255 255);
+        text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 80%);
       }
 
       .match-roll {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: rgb(40 167 69);
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: rgb(144 238 144);
+        text-shadow:
+          0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+          0 0 1rem rgb(144 238 144 / 60%);
       }
 
       .waiting-text {
-        font-size: 0.9rem;
-        color: rgb(120 120 120);
+        font-size: 0.95rem;
+        color: rgb(180 180 180);
         font-style: italic;
       }
 
       .roll-button-small {
-        padding: 0.25rem 0.75rem;
-        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 700;
         cursor: pointer;
+        background: linear-gradient(135deg, rgb(218 165 32), rgb(184 134 11));
+        border: 0.0625rem solid rgb(255 215 0 / 50%);
+        border-radius: 0.5rem;
+        color: rgb(255 255 255);
+        text-shadow: 0 0.0625rem 0.125rem rgb(0 0 0 / 60%);
+        box-shadow: 0 0.25rem 0.75rem rgb(184 134 11 / 50%);
+        transition: all 0.3s ease;
+        align-self: flex-start;
+      }
+
+      .roll-button-small:hover {
+        transform: translateY(-0.0625rem) scale(1.05);
+        box-shadow:
+          0 0.375rem 1rem rgb(218 165 32 / 70%),
+          0 0 1rem rgb(255 215 0 / 40%) inset;
       }
     }
   }
 
   .match-vs {
     text-align: center;
-    font-weight: bold;
+    font-weight: 800;
     color: rgb(220 53 69);
     margin: 0.5rem 0;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    text-shadow:
+      0 0.0625rem 0.125rem rgb(0 0 0 / 80%),
+      0 0 0.75rem rgb(220 53 69 / 50%);
+    letter-spacing: 0.1em;
   }
 
   .match-pending {
-    padding: 1rem;
+    padding: 1.5rem;
     text-align: center;
-    background: rgb(255 193 7 / 10%);
-    border-radius: 0.25rem;
+    background: linear-gradient(135deg, rgb(255 193 7 / 20%), rgb(255 165 0 / 10%));
+    backdrop-filter: blur(0.625rem);
+    border-radius: 0.75rem;
+    border: 0.0625rem solid rgb(255 193 7 / 30%);
 
     .pending-text {
-      font-size: 0.9rem;
-      color: rgb(120 120 120);
+      font-size: 0.95rem;
+      color: rgb(255 220 120);
       font-style: italic;
+      text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 60%);
     }
   }
 
   .tournament-footer {
     text-align: center;
-    padding: 1rem;
-    border-top: 0.0625rem solid rgb(200 200 200 / 50%);
+    padding: 1.5rem;
+    background: linear-gradient(180deg, rgb(0 0 0 / 20%), rgb(0 0 0 / 40%));
+    backdrop-filter: blur(0.625rem);
+    border-top: 0.125rem solid rgb(255 215 0 / 30%);
 
     .countdown-display {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: rgb(40 40 40 / 60%);
+      backdrop-filter: blur(0.9375rem);
+      border-radius: 0.75rem;
+      border: 0.125rem solid rgb(255 255 255 / 20%);
+      box-shadow:
+        0 0.375rem 1rem rgb(0 0 0 / 50%),
+        0 0 0 0.0625rem rgb(255 255 255 / 10%) inset;
 
       .timeout-label {
-        font-size: 0.9rem;
-        color: rgb(120 120 120);
+        font-size: 0.95rem;
+        color: rgb(180 180 180);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
 
       .countdown-timer {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: rgb(100 100 100);
+        font-size: 2rem;
+        font-weight: 900;
+        color: rgb(200 200 200);
+        text-shadow:
+          0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+          0 0 1rem rgb(200 200 200 / 40%);
 
         &.urgent {
-          color: rgb(220 53 69);
-          animation: pulse 1s ease-in-out infinite;
+          color: rgb(255 99 99);
+          text-shadow:
+            0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+            0 0 2rem rgb(220 53 69 / 80%);
+          animation: pulse-urgent 1s ease-in-out infinite;
         }
       }
     }
   }
 
   .spectator-footer {
-    background: rgb(108 117 125 / 10%);
-    border-radius: 0.25rem;
+    background: linear-gradient(135deg, rgb(108 117 125 / 30%), rgb(73 80 87 / 20%));
+    backdrop-filter: blur(0.9375rem);
+    border-top-color: rgb(108 117 125 / 40%);
 
     .spectator-message {
       margin: 0;
-      font-size: 0.95rem;
-      color: rgb(108 117 125);
+      font-size: 1rem;
+      color: rgb(200 200 200);
       font-style: italic;
+      text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 60%);
     }
   }
 }
 
 /* ----------------------------------------- */
-/*  Solo Mode (Original)                     */
+/*  Solo Mode (Original) - Web 3.0 Edition   */
 /* ----------------------------------------- */
 .solo-mode {
-  .rolloff-header {
-    text-align: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 0.125rem solid rgb(200 200 200 / 50%);
-
-    h2 {
-      margin: 0 0 0.5rem;
-    }
-  }
-
   .combatant-info {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin: 1rem 0;
-    padding: 1rem;
-    border: 0.0625rem solid rgb(200 200 200 / 50%);
-    border-radius: 0.25rem;
-    background: rgb(0 0 0 / 5%);
+    gap: 1.5rem;
+    margin: 2rem;
+    padding: 1.5rem;
+    border: 0.125rem solid rgb(255 255 255 / 15%);
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgb(40 40 40 / 50%), rgb(60 60 60 / 30%));
+    backdrop-filter: blur(1.25rem);
+    box-shadow:
+      0 0.5rem 2rem rgb(0 0 0 / 50%),
+      0 0 0 0.0625rem rgb(255 255 255 / 10%) inset;
   }
 
   .combatant-image {
-    width: 3.75rem;
-    height: 3.75rem;
+    width: 5rem;
+    height: 5rem;
     border-radius: 50%;
-    border: 0.125rem solid rgb(100 100 100);
+    border: 0.25rem solid rgb(100 100 100 / 60%);
+    box-shadow:
+      0 0.5rem 1.5rem rgb(0 0 0 / 50%),
+      0 0 0 0.125rem rgb(255 255 255 / 10%) inset;
   }
 
   .combatant-details {
     flex: 1;
 
     .combatant-name {
-      margin: 0 0 0.25rem;
-      font-size: 1.2rem;
-      font-weight: bold;
+      margin: 0 0 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: rgb(255 255 255);
+      text-shadow:
+        0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+        0 0 0.75rem rgb(255 255 255 / 30%);
     }
 
     p {
       margin: 0;
-      color: rgb(120 120 120);
+      color: rgb(200 200 200);
+      font-size: 1rem;
+      text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 60%);
     }
   }
 
   .roll-section {
     text-align: center;
-    margin: 1.5rem 0;
+    margin: 2rem;
+    padding: 2rem;
+    background: linear-gradient(180deg, rgb(0 0 0 / 10%), rgb(0 0 0 / 30%));
+    backdrop-filter: blur(0.3125rem);
+    border-radius: 1rem;
 
     .roll-button {
-      padding: 0.75rem 2rem;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 1rem;
+      padding: 1rem 3rem;
+      font-size: 1.3rem;
+      font-weight: 900;
+      margin-bottom: 1.5rem;
     }
 
     .timeout-warning {
       margin: 0;
       font-size: 1rem;
-      color: rgb(120 120 120);
+      color: rgb(200 200 200);
       font-style: italic;
+      text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 60%);
 
       .countdown-timer {
-        font-size: 1.5rem;
-        font-weight: bold;
+        font-size: 2rem;
+        font-weight: 900;
         font-style: normal;
-        color: rgb(100 100 100);
+        color: rgb(200 200 200);
+        text-shadow:
+          0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+          0 0 1rem rgb(200 200 200 / 40%);
       }
 
       &.urgent {
-        color: rgb(220 53 69);
-        animation: pulse 1s ease-in-out infinite;
+        color: rgb(255 150 150);
 
         .countdown-timer {
-          color: rgb(220 53 69);
+          color: rgb(255 99 99);
+          text-shadow:
+            0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+            0 0 2rem rgb(220 53 69 / 80%);
+          animation: pulse-urgent 1s ease-in-out infinite;
         }
       }
     }
@@ -472,95 +803,25 @@
 
   .roll-complete {
     text-align: center;
-    padding: 1.5rem;
-    margin: 1rem 0;
-    background: rgb(40 167 69 / 10%);
-    border-radius: 0.25rem;
+    padding: 2rem;
+    margin: 2rem;
+    background: linear-gradient(135deg, rgb(40 167 69 / 30%), rgb(34 139 58 / 20%));
+    backdrop-filter: blur(0.9375rem);
+    border-radius: 1rem;
+    border: 0.125rem solid rgb(40 167 69 / 40%);
+    box-shadow:
+      0 0.5rem 2rem rgb(40 167 69 / 40%),
+      0 0 1.5rem rgb(40 167 69 / 20%) inset;
 
     p {
       margin: 0;
-      font-size: 1.1rem;
+      font-size: 1.3rem;
+      color: rgb(180 255 180);
+      font-weight: 700;
+      text-shadow:
+        0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+        0 0 1rem rgb(144 238 144 / 50%);
     }
-  }
-}
-
-/* ----------------------------------------- */
-/*  Rolloff Dialog (GM Dialog - original)    */
-/* ----------------------------------------- */
-.rollies-rolloff-dialog {
-  .rolloff-header {
-    text-align: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 0.125rem solid rgb(200 200 200 / 50%);
-
-    h2 {
-      margin: 0 0 0.5rem;
-    }
-  }
-
-  .combatants-list {
-    margin: 1rem 0;
-  }
-
-  .combatant-row {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-
-    &.rolled {
-      border-color: rgb(100 100 100 / 50%);
-    }
-  }
-
-  .combatant-image {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    margin-right: 1rem;
-    border: 0.125rem solid rgb(100 100 100);
-  }
-
-  .combatant-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .combatant-name {
-    font-weight: bold;
-    font-size: 1rem;
-  }
-
-  .roll-result {
-    font-size: 1.1rem;
-    font-weight: bold;
-  }
-
-  .roll-button {
-    padding: 0.25rem 0.75rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-
-  .waiting {
-    font-style: italic;
-  }
-
-  .rolloff-complete {
-    text-align: center;
-    padding: 1rem;
-    border-radius: 0.25rem;
-    margin: 1rem 0;
-  }
-
-  .rolloff-timeout {
-    text-align: center;
-    padding: 0.5rem;
-    margin: 1rem 0;
-    font-size: 0.9rem;
   }
 }
 
@@ -570,46 +831,66 @@
 .rollies-gm-notification {
   .notification-header {
     text-align: center;
-    margin-bottom: 1rem;
+    padding: 2rem;
+    background: linear-gradient(180deg, rgb(139 69 19 / 60%), rgb(101 67 33 / 40%));
+    backdrop-filter: blur(0.9375rem);
+    border-bottom: 0.125rem solid rgb(255 215 0 / 30%);
 
     h2 {
       margin: 0 0 0.5rem;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: rgb(255 215 0);
+      text-shadow:
+        0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+        0 0 1rem rgb(255 215 0 / 50%);
     }
   }
 
   .ties-list {
-    margin: 1rem 0;
+    margin: 1.5rem;
   }
 
   .tie-group {
     margin-bottom: 1rem;
-    padding: 0.75rem;
-    border: 0.0625rem solid rgb(200 200 200 / 50%);
-    border-radius: 0.25rem;
+    padding: 1rem;
+    border: 0.125rem solid rgb(255 255 255 / 15%);
+    border-radius: 0.75rem;
+    background: rgb(40 40 40 / 50%);
+    backdrop-filter: blur(0.9375rem);
+    box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 40%);
 
     h4 {
-      margin: 0 0 0.5rem;
+      margin: 0 0 0.75rem;
+      color: rgb(255 215 0);
+      font-size: 1.1rem;
+      text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 60%);
     }
   }
 
   .tied-combatants {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 
   .combatant {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    font-size: 0.9rem;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: rgb(220 220 220);
+    padding: 0.5rem 0.75rem;
+    background: rgb(0 0 0 / 30%);
+    border-radius: 0.5rem;
   }
 
   .combatant-image-small {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: 50%;
     border: 0.0625rem solid rgb(100 100 100);
+    box-shadow: 0 0.125rem 0.375rem rgb(0 0 0 / 50%);
   }
 }
 
@@ -619,11 +900,20 @@
 .rollies-winner-announcement {
   .winner-header {
     text-align: center;
-    margin-bottom: 1rem;
+    padding: 2rem;
+    background: linear-gradient(180deg, rgb(218 165 32 / 60%), rgb(184 134 11 / 40%));
+    backdrop-filter: blur(0.9375rem);
+    border-bottom: 0.125rem solid rgb(255 215 0 / 50%);
 
     h2 {
       margin: 0;
-      font-size: 1.5rem;
+      font-size: 2rem;
+      font-weight: 900;
+      color: rgb(255 215 0);
+      text-shadow:
+        0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+        0 0 1.5rem rgb(255 215 0 / 70%);
+      animation: winner-glow 2s ease-in-out infinite;
     }
   }
 
@@ -631,15 +921,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
-    margin: 1rem 0;
+    gap: 2rem;
+    padding: 2rem;
+    background: linear-gradient(180deg, rgb(0 0 0 / 10%), rgb(0 0 0 / 30%));
+    backdrop-filter: blur(0.3125rem);
   }
 
   .winner-image {
-    width: 3.75rem;
-    height: 3.75rem;
+    width: 6rem;
+    height: 6rem;
     border-radius: 50%;
-    border: 0.1875rem solid rgb(255 215 0);
+    border: 0.375rem solid rgb(255 215 0);
+    box-shadow:
+      0 0 3rem rgb(255 215 0 / 80%),
+      0 0.5rem 2rem rgb(0 0 0 / 60%);
+    animation: winner-image-pulse 2s ease-in-out infinite;
   }
 
   .winner-info {
@@ -647,13 +943,20 @@
   }
 
   .winner-name {
-    margin: 0 0 0.5rem;
-    font-size: 1.3rem;
+    margin: 0 0 0.75rem;
+    font-size: 2rem;
+    font-weight: 800;
+    color: rgb(255 215 0);
+    text-shadow:
+      0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+      0 0 1.5rem rgb(255 215 0 / 60%);
   }
 
   .winner-text {
-    margin: 0.25rem 0;
-    font-size: 1rem;
+    margin: 0.5rem 0;
+    font-size: 1.2rem;
+    color: rgb(220 220 220);
+    text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 60%);
   }
 }
 
@@ -661,30 +964,54 @@
 /*  Chat Message Styles                      */
 /* ----------------------------------------- */
 .rollies-winner-message {
-  padding: 0.75rem;
+  padding: 1rem;
   border: 0.125rem solid rgb(255 215 0);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   background: linear-gradient(135deg, rgb(255 249 196), rgb(247 241 211));
   text-align: center;
+  box-shadow:
+    0 0.25rem 1rem rgb(255 215 0 / 40%),
+    0 0 1.5rem rgb(255 215 0 / 20%) inset;
 
   h3 {
     margin: 0 0 0.5rem;
     color: rgb(184 134 11);
-    font-size: 1.2rem;
+    font-size: 1.4rem;
+    font-weight: 800;
+    text-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 20%);
   }
 }
 
 .rollies-roll-message {
-  padding: 0.5rem;
-  border-left: 0.25rem solid rgb(100 100 100);
-  background: rgb(0 0 0 / 5%);
-  margin: 0.25rem 0;
+  padding: 0.75rem;
+  border-left: 0.375rem solid rgb(218 165 32);
+  background: linear-gradient(90deg, rgb(218 165 32 / 20%), rgb(0 0 0 / 10%));
+  margin: 0.5rem 0;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.125rem 0.5rem rgb(0 0 0 / 30%);
 }
 
 /* ----------------------------------------- */
 /*  Animations                               */
 /* ----------------------------------------- */
-@keyframes pulse {
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 2rem rgb(255 215 0 / 70%),
+      0 0.5rem 1.5rem rgb(0 0 0 / 50%),
+      0 0 0 0.25rem rgb(255 215 0 / 50%) inset;
+  }
+
+  50% {
+    box-shadow:
+      0 0 3rem rgb(255 215 0 / 90%),
+      0 0.5rem 1.5rem rgb(0 0 0 / 50%),
+      0 0 0 0.25rem rgb(255 215 0 / 70%) inset;
+  }
+}
+
+@keyframes pulse-urgent {
   0%,
   100% {
     opacity: 1;
@@ -693,6 +1020,92 @@
 
   50% {
     opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes vs-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 1rem rgb(220 53 69 / 60%));
+  }
+
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 2rem rgb(220 53 69 / 80%));
+  }
+}
+
+@keyframes number-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes match-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0.5rem 2rem rgb(40 167 69 / 50%),
+      0 0 2rem rgb(40 167 69 / 30%) inset;
+  }
+
+  50% {
+    box-shadow:
+      0 0.75rem 2.5rem rgb(40 167 69 / 70%),
+      0 0 2.5rem rgb(40 167 69 / 40%) inset;
+  }
+}
+
+@keyframes rotate-glow {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes winner-glow {
+  0%,
+  100% {
+    text-shadow:
+      0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+      0 0 1.5rem rgb(255 215 0 / 70%);
+  }
+
+  50% {
+    text-shadow:
+      0 0.125rem 0.25rem rgb(0 0 0 / 80%),
+      0 0 2.5rem rgb(255 215 0 / 90%);
+  }
+}
+
+@keyframes winner-image-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 3rem rgb(255 215 0 / 80%),
+      0 0.5rem 2rem rgb(0 0 0 / 60%);
+  }
+
+  50% {
     transform: scale(1.05);
+    box-shadow:
+      0 0 4rem rgb(255 215 0 / 100%),
+      0 0.5rem 2rem rgb(0 0 0 / 60%);
   }
 }

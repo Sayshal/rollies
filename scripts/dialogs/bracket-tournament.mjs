@@ -18,8 +18,8 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
     id: 'rollies-bracket-tournament',
     classes: ['rollies-dialog', 'rollies-bracket-tournament'],
     tag: 'form',
-    position: { width: 700, height: 'auto' },
-    window: { resizable: false, minimizable: false, title: 'Rollies.PlayerDialog.BracketHeader' },
+    position: { width: 800, height: 'auto' },
+    window: { frame: false, positioned: false, resizable: false, minimizable: false, title: 'Rollies.PlayerDialog.BracketHeader', contentClasses: ['rollies-frameless-content'] },
     actions: { roll: BracketTournamentDialog._onRoll }
   };
 

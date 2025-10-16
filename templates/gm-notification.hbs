@@ -1,5 +1,10 @@
 {{log 'DEBUG' this}}
 <div class='rollies-gm-notification'>
+  {{! Custom close button for frameless window }}
+  <button type='button' data-action='close' class='frameless-close-button' title='Close'>
+    <i class='fas fa-times'></i>
+  </button>
+
   <div class='notification-header'>
     <h2>{{localize 'Rollies.GMDialog.Header'}}</h2>
     <p>{{localize 'Rollies.GMDialog.Description' count=totalTies}}</p>
@@ -25,7 +30,7 @@
     <button type='button' data-action='startRolloffs' class='primary-button'>
       {{localize 'Rollies.GMDialog.StartRolloffs'}}
     </button>
-    <button type='submit' class='secondary-button'>
+    <button type='button' data-action='close' class='secondary-button'>
       {{localize 'Rollies.GMDialog.KeepInitiative'}}
     </button>
   </div>

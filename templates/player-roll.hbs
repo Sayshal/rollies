@@ -1,6 +1,11 @@
 {{#if (eq mode 'pair')}}
   {{! 1v1 Versus Mode }}
   <div class='rollies-player-roll-dialog versus-mode'>
+    {{! Custom close button for frameless window }}
+    <button type='button' data-action='close' class='frameless-close-button' title='Close'>
+      <i class='fas fa-times'></i>
+    </button>
+
     <div class='rolloff-header'>
       <h2>{{localize 'Rollies.PlayerDialog.VersusHeader'}}</h2>
       <p>{{localize 'Rollies.PlayerDialog.Instructions' die=dieType}}</p>
@@ -55,17 +60,16 @@
         </div>
       </div>
     </div>
-
-    <div class='dialog-buttons'>
-      <button type='submit' class='close-button secondary-button'>
-        {{localize 'Rollies.PlayerDialog.CloseButton'}}
-      </button>
-    </div>
   </div>
 
 {{else}}
   {{! Solo Mode (Original) }}
   <div class='rollies-player-roll-dialog solo-mode'>
+    {{! Custom close button for frameless window }}
+    <button type='button' data-action='close' class='frameless-close-button' title='Close'>
+      <i class='fas fa-times'></i>
+    </button>
+
     <div class='rolloff-header'>
       <h2>{{localize 'Rollies.PlayerDialog.Header'}}</h2>
       <p>{{localize 'Rollies.PlayerDialog.Instructions' die=dieType}}</p>
@@ -94,11 +98,5 @@
         <p>{{localize 'Rollies.PlayerDialog.RollComplete'}}</p>
       </div>
     {{/unless}}
-
-    <div class='dialog-buttons'>
-      <button type='submit' class='close-button secondary-button'>
-        {{localize 'Rollies.PlayerDialog.CloseButton'}}
-      </button>
-    </div>
   </div>
 {{/if}}
