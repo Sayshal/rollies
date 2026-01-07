@@ -3,7 +3,7 @@
  * @module dialogs/player-roll
  */
 
-import { MODULE } from '../config.mjs';
+import { MODULE, hasInteractiveDice } from '../config.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -65,9 +65,14 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     this.hasRolled = false;
     this.isClosed = false;
     this.opponentRolls = new Map();
-    const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+    this.hasManualDice = hasInteractiveDice();
+    this.warningShown = false;
+    const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+    const multiplier = this.hasManualDice ? game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER) : 1;
+    const timeoutSeconds = Math.floor(baseTimeout * multiplier);
     this.timeRemaining = timeoutSeconds;
     this.startTime = Date.now();
+    this.totalTimeout = timeoutSeconds;
     this.countdownInterval = setInterval(() => {
       this._updateCountdown();
     }, 1000);
@@ -75,7 +80,6 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
       this._handleTimeout();
     }, timeoutSeconds * 1000);
     this.hookId = Hooks.on(`${MODULE.ID}.rollUpdate`, this._onRollUpdate.bind(this));
-    console.log(`${MODULE.ID} | PlayerRollDialog created in ${mode} mode`);
   }
 
   /**
@@ -85,7 +89,6 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    */
   _onRollUpdate(data) {
     if (data.rolloffId !== this.rolloffId) return;
-    console.log(`${MODULE.ID} | Received roll update:`, data);
     const rollKey = `${data.rolloffId}-${data.combatantId}`;
     this.opponentRolls.set(rollKey, { total: data.total, name: data.name, img: data.img });
     if (this.rendered) this.render();
@@ -102,8 +105,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
       return;
     }
     const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-    const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
-    this.timeRemaining = Math.max(0, timeoutSeconds - elapsed);
+    this.timeRemaining = Math.max(0, this.totalTimeout - elapsed);
     const countdownElement = this.element?.querySelector('.countdown-timer');
     const warningElement = this.element?.querySelector('.timeout-warning');
     if (countdownElement) countdownElement.textContent = this.timeRemaining;
@@ -148,7 +150,6 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
    */
   static async _onRoll(_event, _target) {
     if (this.hasRolled || this.isClosed) return;
-    console.log(`${MODULE.ID} | Performing roll for`, this.combatant.name);
     this.hasRolled = true;
     this._clearCountdown();
     const roll = await new Roll(`1${this.dieType}`).evaluate();
@@ -172,12 +173,24 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
 
   /**
    * Handle timeout when player doesn't roll in time
-   * Automatically rolls for the player
+   * For manual dice users: shows warning first, then auto-rolls on second timeout
    * @returns {Promise<void>}
    */
   async _handleTimeout() {
     if (this.hasRolled || this.isClosed) return;
-    console.log(`${MODULE.ID} | Timeout - auto-rolling for`, this.combatant.name);
+    if (this.hasManualDice && !this.warningShown) {
+      this.warningShown = true;
+      ui.notifications.warn(game.i18n.localize('Rollies.Warnings.ManualDiceTimeout'));
+      const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+      this.startTime = Date.now();
+      this.totalTimeout = baseTimeout;
+      this.timeRemaining = baseTimeout;
+      this.timeoutId = setTimeout(() => {
+        this._handleTimeout();
+      }, baseTimeout * 1000);
+      return;
+    }
+
     this._clearCountdown();
     const roll = await new Roll(`1${this.dieType}`).evaluate({ allowInteractive: false });
     this.myRoll = roll.total;

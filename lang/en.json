@@ -73,10 +73,18 @@
       "ShowWinnerAnnouncement": {
         "Hint": "Display a popup announcement when someone wins a rolloff",
         "Name": "Show Winner Announcements"
+      },
+      "ManualDiceTimeoutMultiplier": {
+        "Hint": "Multiplier for timeout duration when manual/interactive dice are detected (e.g., 2 = double the timeout)",
+        "Name": "Manual Dice Timeout Multiplier"
       }
     },
+    "Errors": {
+      "BracketCombatantNotFound": "Failed to find combatants for bracket match"
+    },
     "Warnings": {
-      "CannotRoll": "You don't have permission to roll for this combatant"
+      "CannotRoll": "You don't have permission to roll for this combatant",
+      "ManualDiceTimeout": "Manual dice detected - please complete your roll soon or it will be auto-rolled"
     },
     "WinnerDialog": {
       "CloseButton": "Awesome!",

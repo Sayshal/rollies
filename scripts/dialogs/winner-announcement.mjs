@@ -43,7 +43,6 @@ export class WinnerAnnouncementDialog extends HandlebarsApplicationMixin(Applica
    */
   constructor(winner) {
     super();
-    console.log('Rollies | WinnerAnnouncementDialog constructor called', winner);
     this.winner = winner;
     setTimeout(() => {
       if (this.rendered) this.close();

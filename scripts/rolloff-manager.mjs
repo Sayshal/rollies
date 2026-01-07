@@ -192,14 +192,12 @@ export class RolloffManager {
    */
   static async _broadcastRollUpdate(rolloffId, combatant, total) {
     const updateData = { rolloffId, combatantId: combatant.id, total, name: combatant.name, img: combatant.img || combatant.actor?.img };
-    console.log(`${MODULE.ID} | 🔔 Broadcasting roll update:`, updateData);
     for (const user of game.users) {
       if (user.active && !user.isGM) {
         try {
           await user.query(`${MODULE.ID}.rollUpdate`, updateData, { timeout: 1000 });
-          console.log(`${MODULE.ID} | ✅ Sent to ${user.name}`);
-        } catch (error) {
-          console.warn(`${MODULE.ID} | ⚠️ Failed to send to ${user.name}`, error);
+        } catch (_error) {
+          // Silent fail for broadcast - non-critical
         }
       }
     }
@@ -216,13 +214,12 @@ export class RolloffManager {
    */
   static async _broadcastMatchComplete(tournamentId, matchId, winner, loser) {
     const updateData = { tournamentId, matchId, winner, loser };
-    console.log(`${MODULE.ID} | 🏁 Broadcasting match complete:`, updateData);
     for (const user of game.users) {
       if (user.active && !user.isGM) {
         try {
           await user.query(`${MODULE.ID}.matchComplete`, updateData, { timeout: 1000 });
-        } catch (error) {
-          console.warn(`${MODULE.ID} | Failed to broadcast match complete to ${user.name}`, error);
+        } catch (_error) {
+          // Silent fail for broadcast - non-critical
         }
       }
     }
@@ -249,13 +246,14 @@ export class RolloffManager {
       }
       try {
         const queryData = { combatantId: combatant.id, dieType: dieType, rolloffId: rolloffId, mode: 'pair', opponents: opponents };
+        const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+        const multiplier = game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER);
         const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
-          timeout: game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000
+          timeout: baseTimeout * multiplier * 1000
         });
         await this._broadcastRollUpdate(rolloffId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
-      } catch (error) {
-        console.warn(`${MODULE.ID} | Player ${owner.name} failed to respond (${error.message}), auto-rolling`);
+      } catch (_error) {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
         await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
@@ -319,15 +317,13 @@ export class RolloffManager {
       rolloffData.bracket = bracket;
       rolloffData.dialogs = new Map();
     }
-    console.log(`${MODULE.ID} | 🏆 Starting bracket tournament:`, tournamentId);
     for (const combatant of tiedCombatants) {
       const owner = this._getOwnerUser(combatant);
       if (owner) {
         try {
           await owner.query(`${MODULE.ID}.createBracketDialog`, { combatantId: combatant.id, tournamentId: tournamentId, bracket: bracket }, { timeout: 5000 });
-          console.log(`${MODULE.ID} | ✅ Created dialog for ${owner.name}`);
-        } catch (error) {
-          console.warn(`${MODULE.ID} | Failed to create dialog for ${owner.name}`, error);
+        } catch (_error) {
+          // Silent fail - dialog creation is non-critical
         }
       }
     }
@@ -339,17 +335,9 @@ export class RolloffManager {
     match1.combatant2 = match0.winner;
     const combatant3 = tiedCombatants.find((c) => c.id === match1.combatant1.id);
     const winnerFromR0 = tiedCombatants.find((c) => c.id === match0.winner.id);
-    console.log(`${MODULE.ID} | 🔍 Round 1 combatant lookup:`, {
-      match1Combatant1Id: match1.combatant1.id,
-      match0WinnerId: match0.winner.id,
-      combatant3Found: !!combatant3,
-      combatant3Name: combatant3?.name,
-      winnerFromR0Found: !!winnerFromR0,
-      winnerFromR0Name: winnerFromR0?.name,
-      tiedCombatantIds: tiedCombatants.map((c) => ({ id: c.id, name: c.name }))
-    });
     if (!combatant3 || !winnerFromR0) {
-      console.error(`${MODULE.ID} | ❌ Failed to find combatants for round 1!`);
+      console.error(`${MODULE.ID} | Failed to find combatants for bracket round 1`);
+      ui.notifications.error(game.i18n.localize('Rollies.Errors.BracketCombatantNotFound'));
       return;
     }
     await this._conductBracketMatch(combat, combatant3, winnerFromR0, match1, tournamentId);
@@ -359,8 +347,8 @@ export class RolloffManager {
       if (user.active) {
         try {
           await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
-        } catch (error) {
-          console.warn(`${MODULE.ID} | Could not show winner to ${user.name}:`, error.message);
+        } catch (_error) {
+          // Silent fail - winner announcement is non-critical
         }
       }
     }
@@ -378,18 +366,9 @@ export class RolloffManager {
    */
   static async _conductBracketMatch(combat, combatant1, combatant2, match, tournamentId) {
     const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
-    console.log(`${MODULE.ID} | 🥊 Starting match ${match.matchId}:`, {
-      combatant1: { id: combatant1?.id, name: combatant1?.name },
-      combatant2: { id: combatant2?.id, name: combatant2?.name }
-    });
     const matchCombatants = [combatant1, combatant2];
     const rollPromises = matchCombatants.map(async (combatant) => {
       const owner = this._getOwnerUser(combatant);
-      console.log(`${MODULE.ID} | 👤 Owner lookup for ${combatant?.name}:`, {
-        combatantId: combatant?.id,
-        ownerFound: !!owner,
-        ownerName: owner?.name
-      });
       if (!owner) {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
@@ -397,14 +376,13 @@ export class RolloffManager {
         return { combatant, roll, total: roll.total };
       }
       try {
-        console.log(`${MODULE.ID} | 📤 Sending activateMatch to ${owner.name} for ${combatant.name}`);
-        const timeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT) * 1000;
+        const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+        const multiplier = game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER);
+        const timeout = baseTimeout * multiplier * 1000;
         const result = await owner.query(`${MODULE.ID}.activateMatch`, { matchId: match.matchId, tournamentId: tournamentId }, { timeout: timeout });
-        console.log(`${MODULE.ID} | ✅ Got response from ${owner.name}`);
         await this._broadcastRollUpdate(match.matchId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
-      } catch (error) {
-        console.warn(`${MODULE.ID} | Player failed to respond, auto-rolling`, error);
+      } catch (_error) {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
         await this._broadcastRollUpdate(match.matchId, combatant, roll.total);
@@ -464,8 +442,8 @@ export class RolloffManager {
       if (user.active) {
         try {
           await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
-        } catch (error) {
-          console.warn(`${MODULE.ID} | Could not show winner to ${user.name}:`, error.message);
+        } catch (_error) {
+          // Silent fail - winner announcement is non-critical
         }
       }
     }

@@ -3,7 +3,7 @@
  * @module dialogs/bracket-tournament
  */
 
-import { MODULE } from '../config.mjs';
+import { MODULE, hasInteractiveDice } from '../config.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -46,20 +46,16 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
     this.isClosed = false;
     this.timeRemaining = 0;
     this.startTime = null;
+    this.totalTimeout = 0;
     this.countdownInterval = null;
     this.timeoutId = null;
     this.currentResolve = null;
     this.currentReject = null;
+    this.hasManualDice = hasInteractiveDice();
+    this.warningShown = false;
     this.rollUpdateHookId = Hooks.on(`${MODULE.ID}.rollUpdate`, this._onRollUpdate.bind(this));
     this.matchCompleteHookId = Hooks.on(`${MODULE.ID}.matchComplete`, this._onMatchComplete.bind(this));
     this.winnerHookId = Hooks.on(`${MODULE.ID}.winnerAnnounced`, this._onWinnerAnnounced.bind(this));
-    console.log(`${MODULE.ID} | 🏆 BracketTournamentDialog created:`, {
-      player: game.user.name,
-      combatantName: combatant.name,
-      combatantId: combatant.id,
-      tournamentId: this.tournamentId,
-      brackets: bracket.rounds.length
-    });
   }
 
   /**
@@ -69,12 +65,17 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    * @param {Function} reject - Callback to reject on error
    */
   activateMatch(matchId, resolve, reject) {
-    console.log(`${MODULE.ID} | 🎯 Activating match:`, matchId, { currentMatchId: this.currentMatchId, rendered: this.rendered });
     this.currentMatchId = matchId;
     this.currentResolve = resolve;
     this.currentReject = reject;
-    const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+    this.warningShown = false;
+
+    const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+    const multiplier = this.hasManualDice ? game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER) : 1;
+    const timeoutSeconds = Math.floor(baseTimeout * multiplier);
+
     this.timeRemaining = timeoutSeconds;
+    this.totalTimeout = timeoutSeconds;
     this.startTime = Date.now();
     if (this.countdownInterval) clearInterval(this.countdownInterval);
     if (this.timeoutId) clearTimeout(this.timeoutId);
@@ -84,10 +85,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
     this.timeoutId = setTimeout(() => {
       this._handleTimeout();
     }, timeoutSeconds * 1000);
-    if (this.rendered) {
-      console.log(`${MODULE.ID} | 🔄 Triggering render for match activation`);
-      this.render({ force: true });
-    }
+    if (this.rendered) this.render({ force: true });
   }
 
   /**
@@ -98,7 +96,6 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    */
   _onRender(context, options) {
     super._onRender(context, options);
-    console.log(`${MODULE.ID} | 🎨 _onRender called`, { currentMatchId: this.currentMatchId, isEliminated: this.isEliminated });
     this._syncUIState();
   }
 
@@ -109,14 +106,12 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    */
   _syncUIState() {
     if (!this.element) return;
-    console.log(`${MODULE.ID} | 🔧 Syncing UI state`, { currentMatchId: this.currentMatchId, myRollsSize: this.myRolls.size, opponentRollsSize: this.opponentRolls.size });
     const matches = this.element.querySelectorAll('.bracket-match');
     matches.forEach((matchEl) => {
       const matchId = matchEl.dataset.matchId;
       if (!matchId) return;
       const isActiveMatch = matchId === this.currentMatchId;
       const hasRolled = this.myRolls.has(matchId);
-      console.log(`${MODULE.ID} | 🔍 Processing match ${matchId}:`, { isActiveMatch, hasRolled, currentMatchId: this.currentMatchId });
       if (isActiveMatch) matchEl.classList.add('active-match');
       else matchEl.classList.remove('active-match');
       let bracketMatch = null;
@@ -132,12 +127,12 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
       if (bracketMatch && bracketMatch.combatant2) {
         const pendingDiv = matchEl.querySelector('.match-pending');
         if (pendingDiv) {
-          console.log(`${MODULE.ID} | 🔄 Replacing pending with combatant2:`, bracketMatch.combatant2.name);
+          const escapedName = foundry.utils.escapeHTML(bracketMatch.combatant2.name);
           const combatant2Html = `
           <div class="match-combatant${bracketMatch.combatant2.id === this.combatant.id ? ' is-me' : ''}" data-combatant-id="${bracketMatch.combatant2.id}">
-            <img src="${bracketMatch.combatant2.img}" alt="${bracketMatch.combatant2.name}" class="match-portrait">
+            <img src="${bracketMatch.combatant2.img}" alt="${escapedName}" class="match-portrait">
             <div class="match-info">
-              <span class="match-name">${bracketMatch.combatant2.name}</span>
+              <span class="match-name">${escapedName}</span>
               <span class="match-roll" style="display: none;"></span>
               <button type="button" data-action="roll" class="roll-button-small" style="display: none;">Roll</button>
               <span class="waiting-text" style="display: none;">...</span>
@@ -218,18 +213,10 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    * @private
    */
   _onRollUpdate(data) {
-    console.log(`${MODULE.ID} | 🎣 BracketTournamentDialog._onRollUpdate:`, { player: game.user.name, receivedData: data, myTournamentId: this.tournamentId, rendered: this.rendered });
-    if (!data.rolloffId || !data.rolloffId.startsWith(this.tournamentId)) {
-      console.log(`${MODULE.ID} | ⏭️ Skipping - different tournament`);
-      return;
-    }
+    if (!data.rolloffId || !data.rolloffId.startsWith(this.tournamentId)) return;
     const rollKey = `${data.rolloffId}-${data.combatantId}`;
     this.opponentRolls.set(rollKey, { total: data.total, name: data.name, img: data.img });
-    console.log(`${MODULE.ID} | 💾 Stored roll:`, { key: rollKey, total: data.total, mapSize: this.opponentRolls.size });
-    if (this.rendered) {
-      console.log(`${MODULE.ID} | 🔄 Re-rendering after roll update`);
-      this.render({ force: true });
-    }
+    if (this.rendered) this.render({ force: true });
   }
 
   /**
@@ -238,7 +225,6 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    * @private
    */
   _onMatchComplete(data) {
-    console.log(`${MODULE.ID} | 🎣 BracketTournamentDialog._onMatchComplete:`, data);
     if (data.tournamentId !== this.tournamentId) return;
     let matchUpdated = false;
     for (const round of this.bracket.rounds) {
@@ -247,13 +233,9 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
           match.winner = data.winner;
           match.loser = data.loser;
           matchUpdated = true;
-          console.log(`${MODULE.ID} | ✅ Updated match in bracket:`, match.matchId);
           if (round.roundNumber === 0) {
             const nextRound = this.bracket.rounds.find((r) => r.roundNumber === 1);
-            if (nextRound && nextRound.matches.length > 0) {
-              nextRound.matches[0].combatant2 = data.winner;
-              console.log(`${MODULE.ID} | 🎯 Propagated winner to round 1:`, data.winner.name);
-            }
+            if (nextRound && nextRound.matches.length > 0) nextRound.matches[0].combatant2 = data.winner;
           }
           break;
         }
@@ -261,14 +243,10 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
       if (matchUpdated) break;
     }
     if (data.loser && data.loser.id === this.combatant.id) {
-      console.log(`${MODULE.ID} | 💀 Player eliminated`);
       this.isEliminated = true;
       this._clearCountdown();
     }
-    if (this.rendered) {
-      console.log(`${MODULE.ID} | 🔄 Re-rendering after match complete`);
-      this.render({ force: true });
-    }
+    if (this.rendered) this.render({ force: true });
   }
 
   /**
@@ -277,9 +255,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    * @private
    */
   _onWinnerAnnounced(data) {
-    console.log(`${MODULE.ID} | 🎣 BracketTournamentDialog._onWinnerAnnounced:`, data);
     if (data.tournamentId !== this.tournamentId) return;
-    console.log(`${MODULE.ID} | 🏆 Tournament complete, closing dialog`);
     setTimeout(() => {
       if (!this.isClosed) {
         this._cleanup();
@@ -298,8 +274,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
       return;
     }
     const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-    const timeoutSeconds = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
-    this.timeRemaining = Math.max(0, timeoutSeconds - elapsed);
+    this.timeRemaining = Math.max(0, this.totalTimeout - elapsed);
     this._updateCountdownDisplay();
     if (this.timeRemaining === 0) this._clearCountdown();
   }
@@ -317,12 +292,27 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
 
   /**
    * Handle timeout when player doesn't roll
+   * For manual dice users: shows warning first, then auto-rolls on second timeout
    * @private
    * @returns {Promise<void>}
    */
   async _handleTimeout() {
     if (!this.currentMatchId || this.myRolls.has(this.currentMatchId)) return;
-    console.log(`${MODULE.ID} | ⏱️ Timeout - auto-rolling for ${this.combatant.name}`);
+
+    if (this.hasManualDice && !this.warningShown) {
+      this.warningShown = true;
+      ui.notifications.warn(game.i18n.localize('Rollies.Warnings.ManualDiceTimeout'));
+      const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+      this.startTime = Date.now();
+      this.totalTimeout = baseTimeout;
+      this.timeRemaining = baseTimeout;
+      this.timeoutId = setTimeout(() => {
+        this._handleTimeout();
+      }, baseTimeout * 1000);
+      return;
+    }
+
+    this._clearCountdown();
     const roll = await new Roll(`1${this.dieType}`).evaluate({ allowInteractive: false });
     this.myRolls.set(this.currentMatchId, roll.total);
     await this._createRollChatMessage(roll, true);
@@ -380,11 +370,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    * @returns {Promise<void>}
    */
   static async _onRoll(_event, _target) {
-    if (!this.currentMatchId || this.myRolls.has(this.currentMatchId)) {
-      console.log(`${MODULE.ID} | ⛔ Roll blocked - no active match or already rolled`);
-      return;
-    }
-    console.log(`${MODULE.ID} | 🎲 Rolling for ${this.combatant.name} in ${this.currentMatchId}`);
+    if (!this.currentMatchId || this.myRolls.has(this.currentMatchId)) return;
     this._clearCountdown();
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
@@ -430,7 +416,6 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    * @private
    */
   _cleanup(error = null) {
-    console.log(`${MODULE.ID} | 🧹 Cleaning up BracketTournamentDialog`);
     this.isClosed = true;
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);

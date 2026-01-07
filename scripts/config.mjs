@@ -31,7 +31,8 @@ export const MODULE = {
     ROLLOFF_DIE: 'rolloffDie',
     INCLUDE_NPCS: 'includeNPCs',
     ROLLOFF_TIMEOUT: 'rolloffTimeout',
-    SHOW_WINNER_ANNOUNCEMENT: 'showWinnerAnnouncement'
+    SHOW_WINNER_ANNOUNCEMENT: 'showWinnerAnnouncement',
+    MANUAL_DICE_TIMEOUT_MULTIPLIER: 'manualDiceTimeoutMultiplier'
   }
 };
 
@@ -44,4 +45,35 @@ export function getDieTypes() {
   const availableDice = CONFIG.Dice?.fulfillment?.dice;
   for (const [key, value] of Object.entries(availableDice)) dieTypes[key] = value.label;
   return dieTypes;
+}
+
+/**
+ * Check if the current user has interactive/manual dice fulfillment configured
+ * @returns {boolean} True if user has manual or interactive dice configured
+ */
+export function hasInteractiveDice() {
+  const clientSettings = game.settings.storage?.get('client');
+  const diceConfig = clientSettings?.getItem('core.diceConfiguration');
+  if (!diceConfig) return false;
+
+  let configObj;
+  try {
+    configObj = typeof diceConfig === 'string' ? JSON.parse(diceConfig) : diceConfig;
+  } catch (e) {
+    return false;
+  }
+
+  const allMethods = CONFIG.Dice?.fulfillment?.methods;
+  if (!allMethods) return false;
+
+  for (const method of Object.values(configObj)) {
+    if (!method) continue;
+    if (method === 'manual') return true;
+    if (method !== 'random') {
+      const methodConfig = allMethods[method];
+      if (methodConfig?.interactive) return true;
+    }
+  }
+
+  return false;
 }
