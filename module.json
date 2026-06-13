@@ -5,17 +5,20 @@
   "version": "1.0.0",
   "authors": [
     {
-      "name": "Sayshal",
+      "name": "Tyler",
       "url": "https://github.com/sayshal"
     }
   ],
   "compatibility": {
     "minimum": "13",
-    "verified": "13.351",
-    "maximum": "13.999"
+    "verified": "13.351"
   },
-  "esmodules": ["scripts/rollies.mjs"],
-  "styles": ["styles/rollies.css"],
+  "esmodules": [
+    "scripts/rollies.mjs"
+  ],
+  "styles": [
+    "styles/rollies.css"
+  ],
   "languages": [
     {
       "lang": "en",

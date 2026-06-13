@@ -8,7 +8,7 @@
 
 ## Supporting The Module
 
-[![Discord](https://dcbadge.limes.pink/api/server/feMsefha8D)](https://discord.gg/feMsefha8D)
+[![Discord](https://dcbadge.limes.pink/api/server/PzzUwU9gdz)](https://discord.gg/PzzUwU9gdz)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20Me-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/sayshal)
 
 ## Introduction
