@@ -1,12 +1,13 @@
 {
   "id": "rollies",
   "title": "Rollies",
-  "description": "Initiative tie-breaker system inspired by Critical Role's rolloff mechanics!",
+  "description": "When two combatants tie on initiative, Rollies catches it and makes them roll off for the spot, the way Critical Role does it on stream. A two-way tie gets a head-to-head dialog; three or more spins up a seeded bracket the whole table can watch, with countdown timers and auto-rolls for anyone away from the keyboard.",
   "version": "1.0.0",
   "authors": [
     {
       "name": "Tyler",
-      "url": "https://github.com/sayshal"
+      "discord": "Tyler",
+      "url": "https://github.com/Sayshal"
     }
   ],
   "compatibility": {
@@ -26,7 +27,7 @@
       "path": "lang/en.json"
     }
   ],
-  "url": "https://github.com/sayshal/rollies",
-  "manifest": "https://github.com/sayshal/rollies/releases/latest/download/module.json",
-  "download": "https://github.com/sayshal/rollies/releases/latest/download/module.zip"
+  "url": "https://github.com/Sayshal/rollies",
+  "manifest": "https://github.com/Sayshal/rollies/releases/latest/download/module.json",
+  "download": "https://github.com/Sayshal/rollies/releases/latest/download/module.zip"
 }
