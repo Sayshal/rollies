@@ -18,7 +18,7 @@
     justify-content: center;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 0.0625rem solid rgb(200 200 200 / 50%);
+    border-top: 0.0625rem solid var(--atlas-border, rgb(200 200 200 / 50%));
   }
 
   .primary-button {
@@ -34,7 +34,7 @@
     transition: all 0.2s ease;
 
     &:hover {
-      background: rgb(255 255 255 / 10%);
+      background: var(--atlas-bg-hover, rgb(255 255 255 / 10%));
     }
   }
 
@@ -61,7 +61,7 @@
 
     p {
       margin: 0;
-      color: rgb(120 120 120);
+      color: var(--atlas-text-dim, rgb(120 120 120));
     }
   }
 
@@ -82,27 +82,27 @@
     text-align: center;
     padding: 1rem;
     border-radius: 0.5rem;
-    border: 0.125rem solid rgb(200 200 200 / 50%);
-    background: rgb(0 0 0 / 5%);
+    border: 0.125rem solid var(--atlas-border, rgb(200 200 200 / 50%));
+    background: var(--atlas-bg-lighter, rgb(0 0 0 / 5%));
     min-width: 12rem;
   }
 
   .my-side .combatant-card {
-    border-color: rgb(40 167 69 / 50%);
-    background: rgb(40 167 69 / 5%);
+    border-color: rgb(from var(--atlas-success, #28a745) r g b / 50%);
+    background: rgb(from var(--atlas-success, #28a745) r g b / 5%);
   }
 
   .combatant-image {
     width: 5rem;
     height: 5rem;
     border-radius: 50%;
-    border: 0.1875rem solid rgb(100 100 100);
+    border: 0.1875rem solid var(--atlas-border, rgb(100 100 100));
     margin-bottom: 0.75rem;
     transition: all 0.3s ease;
 
     &.rolled {
-      border-color: rgb(40 167 69);
-      box-shadow: 0 0 1rem rgb(40 167 69 / 50%);
+      border-color: var(--atlas-success, rgb(40 167 69));
+      box-shadow: 0 0 1rem rgb(from var(--atlas-success, #28a745) r g b / 50%);
     }
   }
 
@@ -115,7 +115,7 @@
   .side-label {
     margin: 0 0 0.75rem;
     font-size: 0.9rem;
-    color: rgb(120 120 120);
+    color: var(--atlas-text-dim, rgb(120 120 120));
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -123,13 +123,13 @@
   .roll-display {
     margin-top: 0.75rem;
     padding: 0.5rem;
-    background: rgb(40 167 69 / 10%);
+    background: rgb(from var(--atlas-success, #28a745) r g b / 10%);
     border-radius: 0.25rem;
 
     .roll-label {
       display: block;
       font-size: 0.8rem;
-      color: rgb(120 120 120);
+      color: var(--atlas-text-dim, rgb(120 120 120));
       margin-bottom: 0.25rem;
     }
 
@@ -137,19 +137,19 @@
       display: block;
       font-size: 2rem;
       font-weight: bold;
-      color: rgb(40 167 69);
+      color: var(--atlas-success, rgb(40 167 69));
     }
   }
 
   .waiting-indicator {
     margin-top: 0.75rem;
     padding: 0.5rem;
-    background: rgb(255 193 7 / 10%);
+    background: rgb(from var(--atlas-warning, #ffc107) r g b / 10%);
     border-radius: 0.25rem;
 
     .waiting-text {
       font-size: 0.9rem;
-      color: rgb(120 120 120);
+      color: var(--atlas-text-dim, rgb(120 120 120));
       font-style: italic;
     }
   }
@@ -163,8 +163,8 @@
     .vs-text {
       font-size: 2.5rem;
       font-weight: bold;
-      color: rgb(220 53 69);
-      text-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 20%);
+      color: var(--atlas-error, rgb(220 53 69));
+      text-shadow: 0 0.125rem 0.25rem var(--atlas-shadow-light, rgb(0 0 0 / 20%));
     }
 
     .countdown-display {
@@ -174,10 +174,10 @@
         display: block;
         font-size: 2rem;
         font-weight: bold;
-        color: rgb(100 100 100);
+        color: var(--atlas-text-dim, rgb(100 100 100));
 
         &.urgent {
-          color: rgb(220 53 69);
+          color: var(--atlas-error, rgb(220 53 69));
           animation: pulse 1s ease-in-out infinite;
         }
       }
@@ -200,7 +200,7 @@
 
     p {
       margin: 0;
-      color: rgb(120 120 120);
+      color: var(--atlas-text-dim, rgb(120 120 120));
     }
   }
 
@@ -211,10 +211,10 @@
     gap: 0.5rem;
     margin-top: 0.75rem;
     padding: 0.5rem 1rem;
-    background: rgb(255 193 7 / 15%);
-    border: 0.0625rem solid rgb(255 193 7 / 40%);
+    background: rgb(from var(--atlas-warning, #ffc107) r g b / 15%);
+    border: 0.0625rem solid rgb(from var(--atlas-warning, #ffc107) r g b / 40%);
     border-radius: 0.25rem;
-    color: rgb(133 100 4);
+    color: var(--atlas-warning, rgb(133 100 4));
     font-size: 0.95rem;
     font-weight: 500;
 
@@ -242,24 +242,24 @@
       margin: 0 0 0.5rem;
       font-size: 0.9rem;
       text-transform: uppercase;
-      color: rgb(120 120 120);
+      color: var(--atlas-text-dim, rgb(120 120 120));
       letter-spacing: 0.05em;
     }
   }
 
   .bracket-match {
     padding: 0.75rem;
-    border: 0.125rem solid rgb(200 200 200 / 50%);
+    border: 0.125rem solid var(--atlas-border, rgb(200 200 200 / 50%));
     border-radius: 0.5rem;
-    background: rgb(0 0 0 / 3%);
+    background: var(--atlas-bg-lighter, rgb(0 0 0 / 3%));
 
     &.active-match {
-      border-color: rgb(40 167 69);
-      background: rgb(40 167 69 / 5%);
+      border-color: var(--atlas-success, rgb(40 167 69));
+      background: rgb(from var(--atlas-success, #28a745) r g b / 5%);
     }
 
     &.my-match:not(.completed-match) {
-      box-shadow: 0 0 0.5rem rgb(40 167 69 / 30%);
+      box-shadow: 0 0 0.5rem rgb(from var(--atlas-success, #28a745) r g b / 30%);
     }
 
     &.completed-match {
@@ -276,8 +276,8 @@
     transition: all 0.3s ease;
 
     &.is-me {
-      background: rgb(40 167 69 / 10%);
-      border: 0.0625rem solid rgb(40 167 69 / 30%);
+      background: rgb(from var(--atlas-success, #28a745) r g b / 10%);
+      border: 0.0625rem solid rgb(from var(--atlas-success, #28a745) r g b / 30%);
     }
 
     &.is-loser {
@@ -289,7 +289,7 @@
       width: 2.5rem;
       height: 2.5rem;
       border-radius: 50%;
-      border: 0.125rem solid rgb(100 100 100);
+      border: 0.125rem solid var(--atlas-border, rgb(100 100 100));
     }
 
     .match-info {
@@ -306,12 +306,12 @@
       .match-roll {
         font-size: 1.2rem;
         font-weight: bold;
-        color: rgb(40 167 69);
+        color: var(--atlas-success, rgb(40 167 69));
       }
 
       .waiting-text {
         font-size: 0.9rem;
-        color: rgb(120 120 120);
+        color: var(--atlas-text-dim, rgb(120 120 120));
         font-style: italic;
       }
 
@@ -326,7 +326,7 @@
   .match-vs {
     text-align: center;
     font-weight: bold;
-    color: rgb(220 53 69);
+    color: var(--atlas-error, rgb(220 53 69));
     margin: 0.5rem 0;
     font-size: 0.9rem;
   }
@@ -334,12 +334,12 @@
   .match-pending {
     padding: 1rem;
     text-align: center;
-    background: rgb(255 193 7 / 10%);
+    background: rgb(from var(--atlas-warning, #ffc107) r g b / 10%);
     border-radius: 0.25rem;
 
     .pending-text {
       font-size: 0.9rem;
-      color: rgb(120 120 120);
+      color: var(--atlas-text-dim, rgb(120 120 120));
       font-style: italic;
     }
   }
@@ -347,7 +347,7 @@
   .tournament-footer {
     text-align: center;
     padding: 1rem;
-    border-top: 0.0625rem solid rgb(200 200 200 / 50%);
+    border-top: 0.0625rem solid var(--atlas-border, rgb(200 200 200 / 50%));
 
     .countdown-display {
       display: flex;
@@ -357,16 +357,16 @@
 
       .timeout-label {
         font-size: 0.9rem;
-        color: rgb(120 120 120);
+        color: var(--atlas-text-dim, rgb(120 120 120));
       }
 
       .countdown-timer {
         font-size: 1.5rem;
         font-weight: bold;
-        color: rgb(100 100 100);
+        color: var(--atlas-text-dim, rgb(100 100 100));
 
         &.urgent {
-          color: rgb(220 53 69);
+          color: var(--atlas-error, rgb(220 53 69));
           animation: pulse 1s ease-in-out infinite;
         }
       }
@@ -374,13 +374,13 @@
   }
 
   .spectator-footer {
-    background: rgb(108 117 125 / 10%);
+    background: var(--atlas-surface-dim-10, rgb(108 117 125 / 10%));
     border-radius: 0.25rem;
 
     .spectator-message {
       margin: 0;
       font-size: 0.95rem;
-      color: rgb(108 117 125);
+      color: var(--atlas-text-dim, rgb(108 117 125));
       font-style: italic;
     }
   }
@@ -394,7 +394,7 @@
     text-align: center;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 0.125rem solid rgb(200 200 200 / 50%);
+    border-bottom: 0.125rem solid var(--atlas-border, rgb(200 200 200 / 50%));
 
     h2 {
       margin: 0 0 0.5rem;
@@ -407,16 +407,16 @@
     gap: 1rem;
     margin: 1rem 0;
     padding: 1rem;
-    border: 0.0625rem solid rgb(200 200 200 / 50%);
+    border: 0.0625rem solid var(--atlas-border, rgb(200 200 200 / 50%));
     border-radius: 0.25rem;
-    background: rgb(0 0 0 / 5%);
+    background: var(--atlas-bg-lighter, rgb(0 0 0 / 5%));
   }
 
   .combatant-image {
     width: 3.75rem;
     height: 3.75rem;
     border-radius: 50%;
-    border: 0.125rem solid rgb(100 100 100);
+    border: 0.125rem solid var(--atlas-border, rgb(100 100 100));
   }
 
   .combatant-details {
@@ -430,7 +430,7 @@
 
     p {
       margin: 0;
-      color: rgb(120 120 120);
+      color: var(--atlas-text-dim, rgb(120 120 120));
     }
   }
 
@@ -449,22 +449,22 @@
     .timeout-warning {
       margin: 0;
       font-size: 1rem;
-      color: rgb(120 120 120);
+      color: var(--atlas-text-dim, rgb(120 120 120));
       font-style: italic;
 
       .countdown-timer {
         font-size: 1.5rem;
         font-weight: bold;
         font-style: normal;
-        color: rgb(100 100 100);
+        color: var(--atlas-text-dim, rgb(100 100 100));
       }
 
       &.urgent {
-        color: rgb(220 53 69);
+        color: var(--atlas-error, rgb(220 53 69));
         animation: pulse 1s ease-in-out infinite;
 
         .countdown-timer {
-          color: rgb(220 53 69);
+          color: var(--atlas-error, rgb(220 53 69));
         }
       }
     }
@@ -474,7 +474,7 @@
     text-align: center;
     padding: 1.5rem;
     margin: 1rem 0;
-    background: rgb(40 167 69 / 10%);
+    background: rgb(from var(--atlas-success, #28a745) r g b / 10%);
     border-radius: 0.25rem;
 
     p {
@@ -492,7 +492,7 @@
     text-align: center;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 0.125rem solid rgb(200 200 200 / 50%);
+    border-bottom: 0.125rem solid var(--atlas-border, rgb(200 200 200 / 50%));
 
     h2 {
       margin: 0 0 0.5rem;
@@ -510,7 +510,7 @@
     margin-bottom: 0.5rem;
 
     &.rolled {
-      border-color: rgb(100 100 100 / 50%);
+      border-color: rgb(from var(--atlas-border, #4a4a4a) r g b / 50%);
     }
   }
 
@@ -519,7 +519,7 @@
     height: 2.5rem;
     border-radius: 50%;
     margin-right: 1rem;
-    border: 0.125rem solid rgb(100 100 100);
+    border: 0.125rem solid var(--atlas-border, rgb(100 100 100));
   }
 
   .combatant-info {
@@ -584,7 +584,7 @@
   .tie-group {
     margin-bottom: 1rem;
     padding: 0.75rem;
-    border: 0.0625rem solid rgb(200 200 200 / 50%);
+    border: 0.0625rem solid var(--atlas-border, rgb(200 200 200 / 50%));
     border-radius: 0.25rem;
 
     h4 {
@@ -609,7 +609,7 @@
     width: 1.5rem;
     height: 1.5rem;
     border-radius: 50%;
-    border: 0.0625rem solid rgb(100 100 100);
+    border: 0.0625rem solid var(--atlas-border, rgb(100 100 100));
   }
 }
 
@@ -639,7 +639,7 @@
     width: 3.75rem;
     height: 3.75rem;
     border-radius: 50%;
-    border: 0.1875rem solid rgb(255 215 0);
+    border: 0.1875rem solid var(--atlas-callout-border, rgb(255 215 0));
   }
 
   .winner-info {
@@ -662,22 +662,22 @@
 /* ----------------------------------------- */
 .rollies-winner-message {
   padding: 0.75rem;
-  border: 0.125rem solid rgb(255 215 0);
+  border: 0.125rem solid var(--atlas-callout-border, rgb(255 215 0));
   border-radius: 0.5rem;
-  background: linear-gradient(135deg, rgb(255 249 196), rgb(247 241 211));
+  background: linear-gradient(135deg, rgb(from var(--atlas-callout-border, #d4af37) r g b / 20%), rgb(from var(--atlas-callout-border, #d4af37) r g b / 12%));
   text-align: center;
 
   h3 {
     margin: 0 0 0.5rem;
-    color: rgb(184 134 11);
+    color: var(--atlas-callout-text, rgb(184 134 11));
     font-size: 1.2rem;
   }
 }
 
 .rollies-roll-message {
   padding: 0.5rem;
-  border-left: 0.25rem solid rgb(100 100 100);
-  background: rgb(0 0 0 / 5%);
+  border-left: 0.25rem solid var(--atlas-border, rgb(100 100 100));
+  background: var(--atlas-bg-lighter, rgb(0 0 0 / 5%));
   margin: 0.25rem 0;
 }
 
