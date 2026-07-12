@@ -176,7 +176,7 @@ export class RolloffManager {
       if (mode === 'pair') await this._conductPairRolloff(combat, tiedCombatants, rolloffId);
       else await this._conductBracketRolloff(combat, tiedCombatants, rolloffId);
     } catch (error) {
-      console.error(`${MODULE.ID} | Error in rolloff:`, error);
+      ATLAS.log(1, 'Error in rolloff:', error);
     } finally {
       this.activeRolloffs.delete(rolloffId);
     }
@@ -336,8 +336,8 @@ export class RolloffManager {
     const combatant3 = tiedCombatants.find((c) => c.id === match1.combatant1.id);
     const winnerFromR0 = tiedCombatants.find((c) => c.id === match0.winner.id);
     if (!combatant3 || !winnerFromR0) {
-      console.error(`${MODULE.ID} | Failed to find combatants for bracket round 1`);
-      ui.notifications.error(game.i18n.localize('Rollies.Errors.BracketCombatantNotFound'));
+      ATLAS.log(1, 'Failed to find combatants for bracket round 1');
+      ui.notifications.error('Rollies.Errors.BracketCombatantNotFound');
       return;
     }
     await this._conductBracketMatch(combat, combatant3, winnerFromR0, match1, tournamentId);
@@ -393,7 +393,7 @@ export class RolloffManager {
     const maxTotal = Math.max(...matchResults.map((r) => r.total));
     const winners = matchResults.filter((r) => r.total === maxTotal);
     if (winners.length > 1) {
-      ui.notifications.info(game.i18n.localize('Rollies.Messages.AnotherTie'));
+      ui.notifications.info('Rollies.Messages.AnotherTie');
       await this._conductBracketMatch(combat, combatant1, combatant2, match, tournamentId);
       return;
     }
@@ -419,7 +419,7 @@ export class RolloffManager {
     const maxTotal = Math.max(...results.map((r) => r.total));
     const winners = results.filter((r) => r.total === maxTotal);
     if (winners.length > 1) {
-      ui.notifications.info(game.i18n.localize('Rollies.Messages.AnotherTie'));
+      ui.notifications.info('Rollies.Messages.AnotherTie');
       const tiedCombatants = winners.map((w) => w.combatant);
       await this._conductPairRolloff(combat, tiedCombatants, `${rolloffId}-explode`);
       return;
@@ -467,8 +467,8 @@ export class RolloffManager {
    */
   static async _createAutoRollChatMessage(combatant, roll) {
     const content = `<div class="rollies-roll-message">
-      <strong>${combatant.name}</strong> ${game.i18n.localize('Rollies.Chat.RolledFor')} ${game.i18n.localize('Rollies.Chat.Rolloff')}:
-      ${roll.total} (${game.i18n.localize('Rollies.Chat.AutoRoll')})
+      <strong>${combatant.name}</strong> ${_loc('Rollies.Chat.RolledFor')} ${_loc('Rollies.Chat.Rolloff')}:
+      ${roll.total} (${_loc('Rollies.Chat.AutoRoll')})
     </div>`;
     return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker({ actor: combatant.actor }), style: CONST.CHAT_MESSAGE_STYLES.OTHER, rolls: [roll] });
   }
@@ -481,8 +481,8 @@ export class RolloffManager {
    */
   static async _createWinnerChatMessage(winner, _newInitiative) {
     const content = `<div class="rollies-winner-message">
-    <h3>${game.i18n.localize('Rollies.Chat.WinnerAnnouncement')}</h3>
-    <p><strong>${winner.name}</strong> ${game.i18n.localize('Rollies.Chat.WinsRolloff')}</p>
+    <h3>${_loc('Rollies.Chat.WinnerAnnouncement')}</h3>
+    <p><strong>${winner.name}</strong> ${_loc('Rollies.Chat.WinsRolloff')}</p>
   </div>`;
     return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker(), style: CONST.CHAT_MESSAGE_STYLES.OTHER });
   }

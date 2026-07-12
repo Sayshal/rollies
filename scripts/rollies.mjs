@@ -12,6 +12,7 @@ import { registerSettings } from './settings.mjs';
  * Registers settings and initializes the rolloff manager
  */
 Hooks.once('init', () => {
+  ATLAS.register('rollies', { title: 'Rollies', github: 'Sayshal/rollies', theme: { scope: '.rollies-dialog', default: 'dark' } });
   registerSettings();
   RolloffManager.initialize();
 });
