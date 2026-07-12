@@ -1,2 +1,23 @@
-**Changes**
-- Dummy release notes for testing ATLAS update messages.
+## Breaking Changes
+
+- Now requires the 3DS:ATLAS module, which supplies shared logging, localization, and theming.
+- Raised the minimum Foundry version to 14.
+
+## New Features
+
+- Reworked the dialog colors to follow the shared ATLAS theme, adding a per-user theme setting that defaults to dark.
+
+## Bug Fixes
+
+- Manifest update checks now track the latest GitHub release.
+
+## Changes
+
+- Bumped bug report form version placeholders to Foundry 14.364 and dnd5e 6.0.0.
+- Removed the hardcoded maximum compatibility cap.
+- Reworked the bug report form to ask for game system and version instead of a fixed D&D version.
+- Updated the issue tracker Discord link to point at the Rollies community.
+
+## Documentation
+
+- Expanded the module browser description to explain the two-way tie dialog, the seeded bracket for three or more tied combatants, and the countdown timers with auto-rolls for absent players.
