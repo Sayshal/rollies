@@ -342,6 +342,8 @@ export class RolloffManager {
     }
     await this._conductBracketMatch(combat, combatant3, winnerFromR0, match1, tournamentId);
     const finalWinner = combat.combatants.get(match1.winner.id);
+    const finalLosers = tiedCombatants.filter((c) => c.id !== finalWinner.id);
+    Hooks.callAll(`${MODULE.ID}.rolloffResolved`, { combatId: combat.id, mode: 'bracket', winner: this._toHookData(finalWinner), losers: finalLosers.map((c) => this._toHookData(c)) });
     const winnerData = { name: finalWinner.name, img: finalWinner.img || finalWinner.actor?.img, initiative: finalWinner.initiative, tournamentId: tournamentId };
     for (const user of game.users) {
       if (user.active) {
@@ -401,7 +403,7 @@ export class RolloffManager {
     const loser = matchResults.find((r) => r.combatant.id !== winner.id).combatant;
     const maxPairInitiative = Math.max(combatant1.initiative, combatant2.initiative);
     const newInitiative = maxPairInitiative + 0.01;
-    await winner.update({ initiative: newInitiative });
+    await winner.update({ initiative: newInitiative }, { rollies: { rolloffResolution: true } });
     await this._createWinnerChatMessage(winner, newInitiative);
     match.winner = { id: winner.id, name: winner.name, img: winner.img || winner.actor?.img };
     match.loser = { id: loser.id, name: loser.name, img: loser.img || loser.actor?.img };
@@ -424,18 +426,22 @@ export class RolloffManager {
       await this._conductPairRolloff(combat, tiedCombatants, `${rolloffId}-explode`);
       return;
     }
-    await this._applyRolloffWinner(combat, winners[0].combatant);
+    const winner = winners[0].combatant;
+    const losers = results.filter((r) => r.combatant.id !== winner.id).map((r) => r.combatant);
+    await this._applyRolloffWinner(combat, winner, losers);
   }
 
   /**
    * Apply the rolloff winner by updating their initiative
-   * @param {Combat} _combat - The combat encounter
+   * @param {Combat} combat - The combat encounter
    * @param {Combatant} winner - The winning combatant
+   * @param {Array<Combatant>} losers - The defeated combatants
    * @returns {Promise<void>}
    */
-  static async _applyRolloffWinner(_combat, winner) {
+  static async _applyRolloffWinner(combat, winner, losers) {
     const newInitiative = winner.initiative + 0.01;
-    await winner.update({ initiative: newInitiative });
+    await winner.update({ initiative: newInitiative }, { rollies: { rolloffResolution: true } });
+    Hooks.callAll(`${MODULE.ID}.rolloffResolved`, { combatId: combat.id, mode: 'pair', winner: this._toHookData(winner), losers: losers.map((c) => this._toHookData(c)) });
     await this._createWinnerChatMessage(winner, newInitiative);
     const winnerData = { name: winner.name, img: winner.img || winner.actor?.img, initiative: newInitiative };
     for (const user of game.users) {
@@ -447,6 +453,15 @@ export class RolloffManager {
         }
       }
     }
+  }
+
+  /**
+   * Reduce a combatant to the plain shape used in hook payloads
+   * @param {Combatant} combatant - The combatant
+   * @returns {{id: string, name: string, img: string}} Plain combatant data
+   */
+  static _toHookData(combatant) {
+    return { id: combatant.id, name: combatant.name, img: combatant.img || combatant.actor?.img };
   }
 
   /**
