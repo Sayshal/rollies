@@ -88,8 +88,8 @@
   }
 
   .my-side .combatant-card {
-    border-color: rgb(from var(--atlas-success, #28a745) r g b / 50%);
-    background: rgb(from var(--atlas-success, #28a745) r g b / 5%);
+    border-color: rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 50%);
+    background: rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 5%);
   }
 
   .combatant-image {
@@ -102,7 +102,7 @@
 
     &.rolled {
       border-color: var(--atlas-success, rgb(40 167 69));
-      box-shadow: 0 0 1rem rgb(from var(--atlas-success, #28a745) r g b / 50%);
+      box-shadow: 0 0 1rem rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 50%);
     }
   }
 
@@ -123,7 +123,7 @@
   .roll-display {
     margin-top: 0.75rem;
     padding: 0.5rem;
-    background: rgb(from var(--atlas-success, #28a745) r g b / 10%);
+    background: rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 10%);
     border-radius: 0.25rem;
 
     .roll-label {
@@ -144,7 +144,7 @@
   .waiting-indicator {
     margin-top: 0.75rem;
     padding: 0.5rem;
-    background: rgb(from var(--atlas-warning, #ffc107) r g b / 10%);
+    background: rgb(from var(--atlas-warning, rgb(255 193 7)) r g b / 10%);
     border-radius: 0.25rem;
 
     .waiting-text {
@@ -211,8 +211,8 @@
     gap: 0.5rem;
     margin-top: 0.75rem;
     padding: 0.5rem 1rem;
-    background: rgb(from var(--atlas-warning, #ffc107) r g b / 15%);
-    border: 0.0625rem solid rgb(from var(--atlas-warning, #ffc107) r g b / 40%);
+    background: rgb(from var(--atlas-warning, rgb(255 193 7)) r g b / 15%);
+    border: 0.0625rem solid rgb(from var(--atlas-warning, rgb(255 193 7)) r g b / 40%);
     border-radius: 0.25rem;
     color: var(--atlas-warning, rgb(133 100 4));
     font-size: 0.95rem;
@@ -255,11 +255,11 @@
 
     &.active-match {
       border-color: var(--atlas-success, rgb(40 167 69));
-      background: rgb(from var(--atlas-success, #28a745) r g b / 5%);
+      background: rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 5%);
     }
 
     &.my-match:not(.completed-match) {
-      box-shadow: 0 0 0.5rem rgb(from var(--atlas-success, #28a745) r g b / 30%);
+      box-shadow: 0 0 0.5rem rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 30%);
     }
 
     &.completed-match {
@@ -276,8 +276,8 @@
     transition: all 0.3s ease;
 
     &.is-me {
-      background: rgb(from var(--atlas-success, #28a745) r g b / 10%);
-      border: 0.0625rem solid rgb(from var(--atlas-success, #28a745) r g b / 30%);
+      background: rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 10%);
+      border: 0.0625rem solid rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 30%);
     }
 
     &.is-loser {
@@ -334,7 +334,7 @@
   .match-pending {
     padding: 1rem;
     text-align: center;
-    background: rgb(from var(--atlas-warning, #ffc107) r g b / 10%);
+    background: rgb(from var(--atlas-warning, rgb(255 193 7)) r g b / 10%);
     border-radius: 0.25rem;
 
     .pending-text {
@@ -474,7 +474,7 @@
     text-align: center;
     padding: 1.5rem;
     margin: 1rem 0;
-    background: rgb(from var(--atlas-success, #28a745) r g b / 10%);
+    background: rgb(from var(--atlas-success, rgb(40 167 69)) r g b / 10%);
     border-radius: 0.25rem;
 
     p {
@@ -510,7 +510,7 @@
     margin-bottom: 0.5rem;
 
     &.rolled {
-      border-color: rgb(from var(--atlas-border, #4a4a4a) r g b / 50%);
+      border-color: rgb(from var(--atlas-border, rgb(74 74 74)) r g b / 50%);
     }
   }
 
@@ -664,7 +664,7 @@
   padding: 0.75rem;
   border: 0.125rem solid var(--atlas-callout-border, rgb(255 215 0));
   border-radius: 0.5rem;
-  background: linear-gradient(135deg, rgb(from var(--atlas-callout-border, #d4af37) r g b / 20%), rgb(from var(--atlas-callout-border, #d4af37) r g b / 12%));
+  background: linear-gradient(135deg, rgb(from var(--atlas-callout-border, rgb(212 175 55)) r g b / 20%), rgb(from var(--atlas-callout-border, rgb(212 175 55)) r g b / 12%));
   text-align: center;
 
   h3 {
