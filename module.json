@@ -14,7 +14,7 @@
     "minimum": "14",
     "verified": "14.366"
   },
-  "esmodules": ["scripts/rollies.mjs"],
+  "esmodules": ["rollies.mjs"],
   "styles": ["styles/rollies.css"],
   "relationships": {
     "requires": [
