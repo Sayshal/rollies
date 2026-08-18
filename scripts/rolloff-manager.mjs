@@ -144,7 +144,7 @@ export class RolloffManager {
    * @param {Array<Array<Combatant>>} tieGroups - Array of tie groups
    */
   static _handleInitiativeTies(combat, tieGroups) {
-    if (!game.user.isGM) return;
+    if (!ATLAS.isPrimaryGM) return;
     const autoRolloff = game.settings.get(MODULE.ID, MODULE.SETTINGS.AUTO_ROLLOFF);
     if (autoRolloff) tieGroups.forEach((group) => this._startRolloffForGroup(combat, group));
     else this._notifyGMOfTies(combat, tieGroups);
