@@ -116,7 +116,6 @@ async function handleCreateBracketDialog(queryData, _options) {
  * @param {object} queryData - Query data
  * @param {string} queryData.matchId - Match ID
  * @param {string} queryData.tournamentId - Tournament ID
- * @param {QueryOptions} options - Query options
  * @returns {Promise<RollResult>} The roll result
  */
 async function handleActivateMatch(queryData) {

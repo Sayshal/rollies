@@ -27,6 +27,9 @@ export default [
         Folder: 'readonly',
         CONST: 'readonly',
         ChatMessage: 'readonly',
+        Combat: 'readonly',
+        Combatant: 'readonly',
+        User: 'readonly',
         canvas: 'readonly',
         Macro: 'readonly',
         Handlebars: 'readonly',
@@ -72,6 +75,7 @@ export default [
           enableFixer: false
         }
       ],
+      'jsdoc/no-undefined-types': ['warn', { definedTypes: ['BracketTournamentDialog'] }],
       'jsdoc/require-param': ['warn', { exemptedBy: ['inheritdoc', 'override'] }],
       'jsdoc/require-param-description': ['warn', { contexts: ['FunctionDeclaration', 'MethodDefinition'] }],
       'jsdoc/require-param-name': 'warn',

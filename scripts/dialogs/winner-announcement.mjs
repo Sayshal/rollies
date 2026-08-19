@@ -16,7 +16,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /**
  * Dialog to announce rolloff winners
- * @extends {HandlebarsApplicationMixin(ApplicationV2)}
+ * @extends HandlebarsApplicationMixin(ApplicationV2)
  */
 export class WinnerAnnouncementDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @inheritdoc */

@@ -10,7 +10,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 /**
  * Persistent dialog for bracket-style tournaments
  * Shows all rounds, updates in real-time, handles player's rolls
- * @extends {HandlebarsApplicationMixin(ApplicationV2)}
+ * @extends HandlebarsApplicationMixin(ApplicationV2)
  */
 export class BracketTournamentDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @inheritdoc */
@@ -391,7 +391,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
   /**
    * Create chat message for roll
    * @param {Roll} roll - The Roll object
-   * @param {boolean} [isAuto=false] - Whether this was automatic
+   * @param {boolean} [isAuto] - Whether this was automatic
    * @returns {Promise<ChatMessage>} - Chat messages
    * @private
    */
@@ -412,7 +412,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
 
   /**
    * Clean up hooks and timers
-   * @param {Error} [error=null] - Optional error to reject with
+   * @param {Error} [error] - Optional error to reject with
    * @private
    */
   _cleanup(error = null) {

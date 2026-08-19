@@ -24,7 +24,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /**
  * Dialog to notify GM of initiative ties when auto-rolloff is disabled
- * @extends {HandlebarsApplicationMixin(ApplicationV2)}
+ * @extends HandlebarsApplicationMixin(ApplicationV2)
  */
 export class GMNotificationDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @inheritdoc */

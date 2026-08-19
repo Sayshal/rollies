@@ -24,7 +24,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /**
  * Simple dialog for a player to make their rolloff roll (pair/solo modes only)
- * @extends {HandlebarsApplicationMixin(ApplicationV2)}
+ * @extends HandlebarsApplicationMixin(ApplicationV2)
  */
 export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @inheritdoc */
@@ -203,7 +203,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   /**
    * Create a chat message for the roll result
    * @param {Roll} roll - The Roll object
-   * @param {boolean} [isAuto=false] - Whether this was an automatic roll
+   * @param {boolean} [isAuto] - Whether this was an automatic roll
    * @returns {Promise<ChatMessage>} The created chat message
    */
   async _createRollChatMessage(roll, isAuto = false) {
@@ -218,7 +218,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   /**
    * Clean up dialog resources
    * Clears timeout, countdown, and marks as closed
-   * @param {Error} [error=null] - Optional error to reject with
+   * @param {Error} [error] - Optional error to reject with
    */
   _cleanup(error = null) {
     this.isClosed = true;

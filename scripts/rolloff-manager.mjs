@@ -196,7 +196,7 @@ export class RolloffManager {
       if (user.active && !user.isGM) {
         try {
           await user.query(`${MODULE.ID}.rollUpdate`, updateData, { timeout: 1000 });
-        } catch (_error) {
+        } catch {
           // Silent fail for broadcast - non-critical
         }
       }
@@ -218,7 +218,7 @@ export class RolloffManager {
       if (user.active && !user.isGM) {
         try {
           await user.query(`${MODULE.ID}.matchComplete`, updateData, { timeout: 1000 });
-        } catch (_error) {
+        } catch {
           // Silent fail for broadcast - non-critical
         }
       }
@@ -253,7 +253,7 @@ export class RolloffManager {
         });
         await this._broadcastRollUpdate(rolloffId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
-      } catch (_error) {
+      } catch {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
         await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
@@ -322,7 +322,7 @@ export class RolloffManager {
       if (owner) {
         try {
           await owner.query(`${MODULE.ID}.createBracketDialog`, { combatantId: combatant.id, tournamentId: tournamentId, bracket: bracket }, { timeout: 5000 });
-        } catch (_error) {
+        } catch {
           // Silent fail - dialog creation is non-critical
         }
       }
@@ -349,7 +349,7 @@ export class RolloffManager {
       if (user.active) {
         try {
           await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
-        } catch (_error) {
+        } catch {
           // Silent fail - winner announcement is non-critical
         }
       }
@@ -384,7 +384,7 @@ export class RolloffManager {
         const result = await owner.query(`${MODULE.ID}.activateMatch`, { matchId: match.matchId, tournamentId: tournamentId }, { timeout: timeout });
         await this._broadcastRollUpdate(match.matchId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
-      } catch (_error) {
+      } catch {
         const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
         await this._createAutoRollChatMessage(combatant, roll);
         await this._broadcastRollUpdate(match.matchId, combatant, roll.total);
@@ -448,7 +448,7 @@ export class RolloffManager {
       if (user.active) {
         try {
           await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
-        } catch (_error) {
+        } catch {
           // Silent fail - winner announcement is non-critical
         }
       }
