@@ -11,8 +11,8 @@ import { MODULE, getDieTypes } from './config.mjs';
  */
 export function registerSettings() {
   game.settings.register(MODULE.ID, MODULE.SETTINGS.AUTO_ROLLOFF, {
-    name: 'Rollies.Settings.AutoRolloff.Name',
-    hint: 'Rollies.Settings.AutoRolloff.Hint',
+    name: 'ROLLIES.Settings.AutoRolloff.Name',
+    hint: 'ROLLIES.Settings.AutoRolloff.Hint',
     scope: 'world',
     config: true,
     type: Boolean,
@@ -20,8 +20,8 @@ export function registerSettings() {
   });
 
   game.settings.register(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE, {
-    name: 'Rollies.Settings.RolloffDie.Name',
-    hint: 'Rollies.Settings.RolloffDie.Hint',
+    name: 'ROLLIES.Settings.RolloffDie.Name',
+    hint: 'ROLLIES.Settings.RolloffDie.Hint',
     scope: 'world',
     config: true,
     type: String,
@@ -30,8 +30,8 @@ export function registerSettings() {
   });
 
   game.settings.register(MODULE.ID, MODULE.SETTINGS.INCLUDE_NPCS, {
-    name: 'Rollies.Settings.IncludeNPCs.Name',
-    hint: 'Rollies.Settings.IncludeNPCs.Hint',
+    name: 'ROLLIES.Settings.IncludeNPCs.Name',
+    hint: 'ROLLIES.Settings.IncludeNPCs.Hint',
     scope: 'world',
     config: true,
     type: Boolean,
@@ -39,8 +39,8 @@ export function registerSettings() {
   });
 
   game.settings.register(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT, {
-    name: 'Rollies.Settings.RolloffTimeout.Name',
-    hint: 'Rollies.Settings.RolloffTimeout.Hint',
+    name: 'ROLLIES.Settings.RolloffTimeout.Name',
+    hint: 'ROLLIES.Settings.RolloffTimeout.Hint',
     scope: 'world',
     config: true,
     type: Number,
@@ -49,8 +49,8 @@ export function registerSettings() {
   });
 
   game.settings.register(MODULE.ID, MODULE.SETTINGS.SHOW_WINNER_ANNOUNCEMENT, {
-    name: 'Rollies.Settings.ShowWinnerAnnouncement.Name',
-    hint: 'Rollies.Settings.ShowWinnerAnnouncement.Hint',
+    name: 'ROLLIES.Settings.ShowWinnerAnnouncement.Name',
+    hint: 'ROLLIES.Settings.ShowWinnerAnnouncement.Hint',
     scope: 'world',
     config: true,
     type: Boolean,
@@ -58,8 +58,8 @@ export function registerSettings() {
   });
 
   game.settings.register(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER, {
-    name: 'Rollies.Settings.ManualDiceTimeoutMultiplier.Name',
-    hint: 'Rollies.Settings.ManualDiceTimeoutMultiplier.Hint',
+    name: 'ROLLIES.Settings.ManualDiceTimeoutMultiplier.Name',
+    hint: 'ROLLIES.Settings.ManualDiceTimeoutMultiplier.Hint',
     scope: 'world',
     config: true,
     type: Number,

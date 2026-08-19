@@ -19,7 +19,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
     classes: ['rollies-dialog', 'rollies-bracket-tournament'],
     tag: 'form',
     position: { width: 700, height: 'auto' },
-    window: { resizable: false, minimizable: false, title: 'Rollies.PlayerDialog.BracketHeader' },
+    window: { resizable: false, minimizable: false, title: 'ROLLIES.PlayerDialog.BracketHeader' },
     actions: { roll: BracketTournamentDialog._onRoll }
   };
 
@@ -301,7 +301,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
 
     if (this.hasManualDice && !this.warningShown) {
       this.warningShown = true;
-      ui.notifications.warn('Rollies.Warnings.ManualDiceTimeout');
+      ui.notifications.warn('ROLLIES.Warnings.ManualDiceTimeout');
       const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
       this.startTime = Date.now();
       this.totalTimeout = baseTimeout;
@@ -396,9 +396,9 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
    * @private
    */
   async _createRollChatMessage(roll, isAuto = false) {
-    const autoText = isAuto ? ` (${_loc('Rollies.Chat.AutoRoll')})` : '';
+    const autoText = isAuto ? ` (${_loc('ROLLIES.Chat.AutoRoll')})` : '';
     const content = `<div class="rollies-roll-message">
-      <strong>${this.combatant.name}</strong> ${_loc('Rollies.Chat.RolledFor')} ${_loc('Rollies.Chat.Rolloff')}:
+      <strong>${this.combatant.name}</strong> ${_loc('ROLLIES.Chat.RolledFor')} ${_loc('ROLLIES.Chat.Rolloff')}:
       ${roll.total}${autoText}
     </div>`;
     return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker({ actor: this.combatant.actor }), style: CONST.CHAT_MESSAGE_STYLES.OTHER, rolls: [roll] });

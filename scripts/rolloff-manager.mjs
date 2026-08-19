@@ -337,7 +337,7 @@ export class RolloffManager {
     const winnerFromR0 = tiedCombatants.find((c) => c.id === match0.winner.id);
     if (!combatant3 || !winnerFromR0) {
       ATLAS.log(1, 'Failed to find combatants for bracket round 1');
-      ui.notifications.error('Rollies.Errors.BracketCombatantNotFound');
+      ui.notifications.error('ROLLIES.Errors.BracketCombatantNotFound');
       return;
     }
     await this._conductBracketMatch(combat, combatant3, winnerFromR0, match1, tournamentId);
@@ -395,7 +395,7 @@ export class RolloffManager {
     const maxTotal = Math.max(...matchResults.map((r) => r.total));
     const winners = matchResults.filter((r) => r.total === maxTotal);
     if (winners.length > 1) {
-      ui.notifications.info('Rollies.Messages.AnotherTie');
+      ui.notifications.info('ROLLIES.Messages.AnotherTie');
       await this._conductBracketMatch(combat, combatant1, combatant2, match, tournamentId);
       return;
     }
@@ -421,7 +421,7 @@ export class RolloffManager {
     const maxTotal = Math.max(...results.map((r) => r.total));
     const winners = results.filter((r) => r.total === maxTotal);
     if (winners.length > 1) {
-      ui.notifications.info('Rollies.Messages.AnotherTie');
+      ui.notifications.info('ROLLIES.Messages.AnotherTie');
       const tiedCombatants = winners.map((w) => w.combatant);
       await this._conductPairRolloff(combat, tiedCombatants, `${rolloffId}-explode`);
       return;
@@ -482,8 +482,8 @@ export class RolloffManager {
    */
   static async _createAutoRollChatMessage(combatant, roll) {
     const content = `<div class="rollies-roll-message">
-      <strong>${combatant.name}</strong> ${_loc('Rollies.Chat.RolledFor')} ${_loc('Rollies.Chat.Rolloff')}:
-      ${roll.total} (${_loc('Rollies.Chat.AutoRoll')})
+      <strong>${combatant.name}</strong> ${_loc('ROLLIES.Chat.RolledFor')} ${_loc('ROLLIES.Chat.Rolloff')}:
+      ${roll.total} (${_loc('ROLLIES.Chat.AutoRoll')})
     </div>`;
     return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker({ actor: combatant.actor }), style: CONST.CHAT_MESSAGE_STYLES.OTHER, rolls: [roll] });
   }
@@ -496,8 +496,8 @@ export class RolloffManager {
    */
   static async _createWinnerChatMessage(winner, _newInitiative) {
     const content = `<div class="rollies-winner-message">
-    <h3>${_loc('Rollies.Chat.WinnerAnnouncement')}</h3>
-    <p><strong>${winner.name}</strong> ${_loc('Rollies.Chat.WinsRolloff')}</p>
+    <h3>${_loc('ROLLIES.Chat.WinnerAnnouncement')}</h3>
+    <p><strong>${winner.name}</strong> ${_loc('ROLLIES.Chat.WinsRolloff')}</p>
   </div>`;
     return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker(), style: CONST.CHAT_MESSAGE_STYLES.OTHER });
   }

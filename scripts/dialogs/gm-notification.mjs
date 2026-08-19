@@ -33,7 +33,7 @@ export class GMNotificationDialog extends HandlebarsApplicationMixin(Application
     classes: ['rollies-dialog', 'rollies-gm-notification'],
     tag: 'div',
     position: { width: 400, height: 'auto' },
-    window: { resizable: false, title: 'Rollies.GMDialog.Title' },
+    window: { resizable: false, title: 'ROLLIES.GMDialog.Title' },
     actions: { startRolloffs: GMNotificationDialog.#startRolloffs }
   };
 

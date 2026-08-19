@@ -1,14 +1,14 @@
 {{log 'DEBUG' this}}
 <div class='rollies-gm-notification'>
   <div class='notification-header'>
-    <h2>{{localize 'Rollies.GMDialog.Header'}}</h2>
-    <p>{{localize 'Rollies.GMDialog.Description' count=totalTies}}</p>
+    <h2>{{localize 'ROLLIES.GMDialog.Header'}}</h2>
+    <p>{{localize 'ROLLIES.GMDialog.Description' count=totalTies}}</p>
   </div>
 
   <div class='ties-list'>
     {{#each ties}}
       <div class='tie-group'>
-        <h4>{{localize 'Rollies.GMDialog.Initiative'}}: {{initiative}}</h4>
+        <h4>{{localize 'ROLLIES.GMDialog.Initiative'}}: {{initiative}}</h4>
         <div class='tied-combatants'>
           {{#each combatants}}
             <div class='combatant'>
@@ -23,10 +23,10 @@
 
   <div class='dialog-buttons'>
     <button type='button' data-action='startRolloffs' class='primary-button'>
-      {{localize 'Rollies.GMDialog.StartRolloffs'}}
+      {{localize 'ROLLIES.GMDialog.StartRolloffs'}}
     </button>
     <button type='submit' class='secondary-button'>
-      {{localize 'Rollies.GMDialog.KeepInitiative'}}
+      {{localize 'ROLLIES.GMDialog.KeepInitiative'}}
     </button>
   </div>
 </div>
