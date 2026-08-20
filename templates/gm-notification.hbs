@@ -1,4 +1,3 @@
-{{log 'DEBUG' this}}
 <div class='rollies-gm-notification'>
   <div class='notification-header'>
     <h2>{{localize 'ROLLIES.GMDialog.Header'}}</h2>
@@ -6,7 +5,7 @@
   </div>
 
   <div class='ties-list'>
-    {{#each ties}}
+    {{#each tieData}}
       <div class='tie-group'>
         <h4>{{localize 'ROLLIES.GMDialog.Initiative'}}: {{initiative}}</h4>
         <div class='tied-combatants'>
