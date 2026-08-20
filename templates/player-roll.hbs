@@ -62,43 +62,4 @@
       </button>
     </div>
   </div>
-
-{{else}}
-  {{! Solo Mode (Original) }}
-  <div class='rollies-player-roll-dialog solo-mode'>
-    <div class='rolloff-header'>
-      <h2>{{localize 'ROLLIES.PlayerDialog.Header'}}</h2>
-      <p>{{localize 'ROLLIES.PlayerDialog.Instructions' die=dieType}}</p>
-    </div>
-
-    <div class='combatant-info'>
-      <img src='{{combatant.img}}' alt='{{combatant.name}}' class='combatant-image' />
-      <div class='combatant-details'>
-        <h3 class='combatant-name'>{{combatant.name}}</h3>
-        <p>{{localize 'ROLLIES.PlayerDialog.RollFor'}} {{dieType}}</p>
-      </div>
-    </div>
-
-    {{#unless hasRolled}}
-      <div class='roll-section'>
-        <button type='button' data-action='roll' class='roll-button primary-button'>
-          {{localize 'ROLLIES.PlayerDialog.RollButton'}}
-        </button>
-        <p class='timeout-warning{{#if (lt timeRemaining 6)}} urgent{{/if}}'>
-          {{localize 'ROLLIES.PlayerDialog.TimeoutWarning'}} <span class='countdown-timer'>{{timeRemaining}}</span>
-          {{localize 'ATLAS.Common.Seconds'}}
-        </p>
-      </div>
-    {{else}}
-      <div class='roll-complete'>
-        <p>{{localize 'ROLLIES.PlayerDialog.RollComplete'}}</p>
-      </div>
-    {{/unless}}
-
-    <div class='dialog-buttons'>
-      <button type='submit' class='close-button secondary-button'>
-        {{localize 'ATLAS.Common.Close'}}
-      </button>
-    </div>
-  </div>
 {{/if}}
