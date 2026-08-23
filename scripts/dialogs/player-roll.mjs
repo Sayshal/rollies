@@ -1,5 +1,5 @@
 /**
- * Player roll dialog for initiative rolloffs (pair and solo modes)
+ * Player roll dialog for initiative rolloffs (pair mode)
  * @module dialogs/player-roll
  */
 
@@ -18,13 +18,13 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * @property {number} timeout - Timeout duration in seconds
  * @property {number} timeRemaining - Seconds remaining in countdown
  * @property {string} rolloffId - Unique rolloff identifier
- * @property {string} mode - Rolloff mode: 'solo' or 'pair'
+ * @property {string} mode - Rolloff mode: 'pair'
  * @property {Array<object>} opponents - Opponent data for pair mode
  */
 
 /**
- * Simple dialog for a player to make their rolloff roll (pair/solo modes only)
- * @extends {HandlebarsApplicationMixin(ApplicationV2)}
+ * Simple dialog for a player to make their rolloff roll (pair mode only)
+ * @extends HandlebarsApplicationMixin(ApplicationV2)
  */
 export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @inheritdoc */
@@ -33,7 +33,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     classes: ['rollies-dialog', 'rollies-player-roll'],
     tag: 'form',
     position: { width: 600, height: 'auto' },
-    window: { resizable: false, minimizable: false, title: 'Rollies.PlayerDialog.Title' },
+    window: { resizable: false, minimizable: false, title: 'ROLLIES.PlayerDialog.Title' },
     actions: { roll: PlayerRollDialog._onRoll }
   };
 
@@ -44,16 +44,16 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   static PARTS = { form: { template: 'modules/rollies/templates/player-roll.hbs' } };
 
   /**
-   * Create a new PlayerRollDialog (for pair/solo modes)
+   * Create a new PlayerRollDialog (for pair mode)
    * @param {Combatant} combatant - The combatant performing the roll
    * @param {string} dieType - Type of die to roll (e.g., 'd20')
    * @param {string} rolloffId - Unique identifier for this rolloff
    * @param {Function} resolveCallback - Callback to resolve with roll result
    * @param {Function} rejectCallback - Callback to reject on error
-   * @param {string} mode - Rolloff mode: 'solo' or 'pair'
+   * @param {string} mode - Rolloff mode: 'pair'
    * @param {Array<object>} opponents - Opponent data for pair mode
    */
-  constructor(combatant, dieType, rolloffId, resolveCallback, rejectCallback, mode = 'solo', opponents = null) {
+  constructor(combatant, dieType, rolloffId, resolveCallback, rejectCallback, mode, opponents = null) {
     super();
     this.combatant = combatant;
     this.dieType = dieType;
@@ -180,7 +180,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     if (this.hasRolled || this.isClosed) return;
     if (this.hasManualDice && !this.warningShown) {
       this.warningShown = true;
-      ui.notifications.warn('Rollies.Warnings.ManualDiceTimeout');
+      ui.notifications.warn('ROLLIES.Warnings.ManualDiceTimeout');
       const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
       this.startTime = Date.now();
       this.totalTimeout = baseTimeout;
@@ -203,13 +203,13 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   /**
    * Create a chat message for the roll result
    * @param {Roll} roll - The Roll object
-   * @param {boolean} [isAuto=false] - Whether this was an automatic roll
+   * @param {boolean} [isAuto] - Whether this was an automatic roll
    * @returns {Promise<ChatMessage>} The created chat message
    */
   async _createRollChatMessage(roll, isAuto = false) {
-    const autoText = isAuto ? ` (${_loc('Rollies.Chat.AutoRoll')})` : '';
+    const autoText = isAuto ? ` (${_loc('ROLLIES.Chat.AutoRoll')})` : '';
     const content = `<div class="rollies-roll-message">
-      <strong>${this.combatant.name}</strong> ${_loc('Rollies.Chat.RolledFor')} ${_loc('Rollies.Chat.Rolloff')}:
+      <strong>${this.combatant.name}</strong> ${_loc('ROLLIES.Chat.RolledFor')} ${_loc('ROLLIES.Chat.Rolloff')}:
       ${roll.total}${autoText}
     </div>`;
     return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker({ actor: this.combatant.actor }), style: CONST.CHAT_MESSAGE_STYLES.OTHER, rolls: [roll] });
@@ -218,7 +218,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   /**
    * Clean up dialog resources
    * Clears timeout, countdown, and marks as closed
-   * @param {Error} [error=null] - Optional error to reject with
+   * @param {Error} [error] - Optional error to reject with
    */
   _cleanup(error = null) {
     this.isClosed = true;

@@ -1,11 +1,11 @@
 <div class='rollies-bracket-tournament-dialog'>
   <div class='tournament-header'>
-    <h2>{{localize 'Rollies.PlayerDialog.BracketHeader'}}</h2>
-    <p>{{localize 'Rollies.PlayerDialog.Instructions' die=dieType}}</p>
+    <h2>{{localize 'ROLLIES.PlayerDialog.BracketHeader'}}</h2>
+    <p>{{localize 'ROLLIES.PlayerDialog.Instructions' die=dieType}}</p>
     {{#if isEliminated}}
       <div class='spectator-notice'>
         <i class='fas fa-eye'></i>
-        <span>{{localize 'Rollies.PlayerDialog.SpectatorMode'}}</span>
+        <span>{{localize 'ROLLIES.PlayerDialog.SpectatorMode'}}</span>
       </div>
     {{/if}}
   </div>
@@ -13,7 +13,7 @@
   <div class='bracket-container'>
     {{#each bracket.rounds}}
       <div class='bracket-round round-{{roundNumber}}'>
-        <h4 class='round-label'>{{localize 'Rollies.PlayerDialog.Round'}} {{roundLabel}}</h4>
+        <h4 class='round-label'>{{localize 'ROLLIES.PlayerDialog.Round'}} {{roundLabel}}</h4>
         {{#each matches}}
           <div class='bracket-match{{#if isMyMatch}} my-match{{/if}}{{#if matchComplete}} completed-match{{/if}}'
             data-match-id='{{matchId}}'>
@@ -27,7 +27,7 @@
                 {{! All possible states - _onRender will show/hide }}
                 <span class='match-roll' style='display: none;'></span>
                 <button type='button' data-action='roll' class='roll-button-small'
-                  style='display: none;'>{{localize 'Rollies.PlayerDialog.Roll'}}</button>
+                  style='display: none;'>{{localize 'ROLLIES.PlayerDialog.Roll'}}</button>
                 <span class='waiting-text' style='display: none;'>...</span>
               </div>
             </div>
@@ -44,13 +44,13 @@
                   {{! All possible states - _onRender will show/hide }}
                   <span class='match-roll' style='display: none;'></span>
                   <button type='button' data-action='roll' class='roll-button-small'
-                    style='display: none;'>{{localize 'Rollies.PlayerDialog.Roll'}}</button>
+                    style='display: none;'>{{localize 'ROLLIES.PlayerDialog.Roll'}}</button>
                   <span class='waiting-text' style='display: none;'>...</span>
                 </div>
               </div>
             {{else}}
               <div class='match-pending'>
-                <span class='pending-text'>{{localize 'Rollies.PlayerDialog.WaitingForWinner'}}</span>
+                <span class='pending-text'>{{localize 'ROLLIES.PlayerDialog.WaitingForWinner'}}</span>
               </div>
             {{/if}}
           </div>
@@ -62,19 +62,19 @@
   {{#unless isEliminated}}
     <div class='tournament-footer'>
       <div class='countdown-display'>
-        <span class='timeout-label'>{{localize 'Rollies.PlayerDialog.TimeRemaining'}}</span>
+        <span class='timeout-label'>{{localize 'ROLLIES.PlayerDialog.TimeRemaining'}}</span>
         <span class='countdown-timer'>{{timeRemaining}}s</span>
       </div>
     </div>
   {{else}}
     <div class='tournament-footer spectator-footer'>
-      <p class='spectator-message'>{{localize 'Rollies.PlayerDialog.SpectatingMessage'}}</p>
+      <p class='spectator-message'>{{localize 'ROLLIES.PlayerDialog.SpectatingMessage'}}</p>
     </div>
   {{/unless}}
 
   <div class='dialog-buttons'>
     <button type='submit' class='close-button secondary-button'>
-      {{localize 'Rollies.PlayerDialog.CloseButton'}}
+      {{localize 'ATLAS.Common.Close'}}
     </button>
   </div>
 </div>

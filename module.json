@@ -2,7 +2,7 @@
   "id": "rollies",
   "title": "Rollies",
   "description": "When two combatants tie on initiative, Rollies catches it and makes them roll off for the spot, the way Critical Role does it on stream. A two-way tie gets a head-to-head dialog; three or more spins up a seeded bracket the whole table can watch, with countdown timers and auto-rolls for anyone away from the keyboard.",
-  "version": "1.0.0",
+  "version": "",
   "authors": [
     {
       "name": "Tyler",
@@ -12,14 +12,10 @@
   ],
   "compatibility": {
     "minimum": "14",
-    "verified": "14.364"
+    "verified": "14.367"
   },
-  "esmodules": [
-    "scripts/rollies.mjs"
-  ],
-  "styles": [
-    "styles/rollies.css"
-  ],
+  "esmodules": ["rollies.mjs"],
+  "styles": ["styles/rollies.css"],
   "relationships": {
     "requires": [
       {

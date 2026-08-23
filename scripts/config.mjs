@@ -59,7 +59,7 @@ export function hasInteractiveDice() {
   let configObj;
   try {
     configObj = typeof diceConfig === 'string' ? JSON.parse(diceConfig) : diceConfig;
-  } catch (e) {
+  } catch {
     return false;
   }
 

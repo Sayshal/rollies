@@ -14,7 +14,7 @@ import { WinnerAnnouncementDialog } from './dialogs/winner-announcement.mjs';
  * @property {string} combatantId - The ID of the combatant rolling
  * @property {string} dieType - The type of die to roll (e.g., 'd20')
  * @property {string} rolloffId - Unique identifier for this rolloff
- * @property {string} mode - Rolloff mode: 'solo', 'pair', or 'bracket'
+ * @property {string} mode - Rolloff mode: 'pair'
  * @property {Array<object>} [opponents] - Opponent data for pair mode
  * @property {object} [bracket] - Bracket structure for bracket mode
  */
@@ -76,7 +76,7 @@ export function registerQueries() {
 }
 
 /**
- * Handle incoming roll request from GM (pair/solo modes only)
+ * Handle incoming roll request from GM (pair mode only)
  * @param {RollRequestQuery} queryData - The query data containing roll request information
  * @param {QueryOptions} _options - Query options including timeout
  * @returns {Promise<RollResult>} The roll result
@@ -116,7 +116,6 @@ async function handleCreateBracketDialog(queryData, _options) {
  * @param {object} queryData - Query data
  * @param {string} queryData.matchId - Match ID
  * @param {string} queryData.tournamentId - Tournament ID
- * @param {QueryOptions} options - Query options
  * @returns {Promise<RollResult>} The roll result
  */
 async function handleActivateMatch(queryData) {
@@ -178,7 +177,7 @@ async function handleMatchComplete(queryData, _options) {
 }
 
 /**
- * Show roll dialog to player (pair/solo modes)
+ * Show roll dialog to player (pair mode)
  * @param {Combatant} combatant - The combatant performing the roll
  * @param {string} dieType - Type of die to roll
  * @param {string} rolloffId - Unique rolloff identifier
@@ -186,7 +185,7 @@ async function handleMatchComplete(queryData, _options) {
  * @param {Array<object>} opponents - Opponent data
  * @returns {Promise<object>} Promise that resolves with roll result
  */
-async function showRollDialog(combatant, dieType, rolloffId, mode = 'solo', opponents = null) {
+async function showRollDialog(combatant, dieType, rolloffId, mode, opponents = null) {
   return new Promise((resolve, reject) => {
     const dialog = new PlayerRollDialog(combatant, dieType, rolloffId, resolve, reject, mode, opponents);
     dialog.render(true);

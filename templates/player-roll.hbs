@@ -2,8 +2,8 @@
   {{! 1v1 Versus Mode }}
   <div class='rollies-player-roll-dialog versus-mode'>
     <div class='rolloff-header'>
-      <h2>{{localize 'Rollies.PlayerDialog.VersusHeader'}}</h2>
-      <p>{{localize 'Rollies.PlayerDialog.Instructions' die=dieType}}</p>
+      <h2>{{localize 'ROLLIES.PlayerDialog.VersusHeader'}}</h2>
+      <p>{{localize 'ROLLIES.PlayerDialog.Instructions' die=dieType}}</p>
     </div>
 
     <div class='versus-container'>
@@ -13,15 +13,15 @@
           <img src='{{combatant.img}}' alt='{{combatant.name}}'
             class='combatant-image{{#if hasRolled}} rolled{{/if}}' />
           <h3 class='combatant-name'>{{combatant.name}}</h3>
-          <p class='side-label'>{{localize 'Rollies.PlayerDialog.You'}}</p>
+          <p class='side-label'>{{localize 'ROLLIES.PlayerDialog.You'}}</p>
           {{#if hasRolled}}
             <div class='roll-display'>
-              <span class='roll-label'>{{localize 'Rollies.PlayerDialog.Rolled'}}</span>
+              <span class='roll-label'>{{localize 'ROLLIES.PlayerDialog.Rolled'}}</span>
               <span class='roll-value'>{{myRoll}}</span>
             </div>
           {{else}}
             <button type='button' data-action='roll' class='roll-button primary-button'>
-              {{localize 'Rollies.PlayerDialog.RollButton'}}
+              {{localize 'ROLLIES.PlayerDialog.RollButton'}}
             </button>
           {{/if}}
         </div>
@@ -41,15 +41,15 @@
           <img src='{{opponent.img}}' alt='{{opponent.name}}'
             class='combatant-image{{#if opponent.roll}} rolled{{/if}}' />
           <h3 class='combatant-name'>{{opponent.name}}</h3>
-          <p class='side-label'>{{localize 'Rollies.PlayerDialog.Opponent'}}</p>
+          <p class='side-label'>{{localize 'ROLLIES.PlayerDialog.Opponent'}}</p>
           {{#if opponent.roll}}
             <div class='roll-display'>
-              <span class='roll-label'>{{localize 'Rollies.PlayerDialog.Rolled'}}</span>
+              <span class='roll-label'>{{localize 'ROLLIES.PlayerDialog.Rolled'}}</span>
               <span class='roll-value'>{{opponent.roll.total}}</span>
             </div>
           {{else}}
             <div class='waiting-indicator'>
-              <span class='waiting-text'>{{localize 'Rollies.PlayerDialog.WaitingForRoll'}}</span>
+              <span class='waiting-text'>{{localize 'ROLLIES.PlayerDialog.WaitingForRoll'}}</span>
             </div>
           {{/if}}
         </div>
@@ -58,46 +58,7 @@
 
     <div class='dialog-buttons'>
       <button type='submit' class='close-button secondary-button'>
-        {{localize 'Rollies.PlayerDialog.CloseButton'}}
-      </button>
-    </div>
-  </div>
-
-{{else}}
-  {{! Solo Mode (Original) }}
-  <div class='rollies-player-roll-dialog solo-mode'>
-    <div class='rolloff-header'>
-      <h2>{{localize 'Rollies.PlayerDialog.Header'}}</h2>
-      <p>{{localize 'Rollies.PlayerDialog.Instructions' die=dieType}}</p>
-    </div>
-
-    <div class='combatant-info'>
-      <img src='{{combatant.img}}' alt='{{combatant.name}}' class='combatant-image' />
-      <div class='combatant-details'>
-        <h3 class='combatant-name'>{{combatant.name}}</h3>
-        <p>{{localize 'Rollies.PlayerDialog.RollFor'}} {{dieType}}</p>
-      </div>
-    </div>
-
-    {{#unless hasRolled}}
-      <div class='roll-section'>
-        <button type='button' data-action='roll' class='roll-button primary-button'>
-          {{localize 'Rollies.PlayerDialog.RollButton'}}
-        </button>
-        <p class='timeout-warning{{#if (lt timeRemaining 6)}} urgent{{/if}}'>
-          {{localize 'Rollies.PlayerDialog.TimeoutWarning'}} <span class='countdown-timer'>{{timeRemaining}}</span>
-          {{localize 'Rollies.PlayerDialog.TimeoutSeconds'}}
-        </p>
-      </div>
-    {{else}}
-      <div class='roll-complete'>
-        <p>{{localize 'Rollies.PlayerDialog.RollComplete'}}</p>
-      </div>
-    {{/unless}}
-
-    <div class='dialog-buttons'>
-      <button type='submit' class='close-button secondary-button'>
-        {{localize 'Rollies.PlayerDialog.CloseButton'}}
+        {{localize 'ATLAS.Common.Close'}}
       </button>
     </div>
   </div>

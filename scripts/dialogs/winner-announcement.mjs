@@ -16,7 +16,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /**
  * Dialog to announce rolloff winners
- * @extends {HandlebarsApplicationMixin(ApplicationV2)}
+ * @extends HandlebarsApplicationMixin(ApplicationV2)
  */
 export class WinnerAnnouncementDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @inheritdoc */
@@ -25,7 +25,7 @@ export class WinnerAnnouncementDialog extends HandlebarsApplicationMixin(Applica
     classes: ['rollies-dialog', 'rollies-winner'],
     tag: 'div',
     position: { width: 'auto', height: 'auto' },
-    window: { resizable: false, minimizable: false, title: 'Rollies.WinnerDialog.Title' }
+    window: { resizable: false, minimizable: false, title: 'ROLLIES.WinnerDialog.Title' }
   };
 
   /**
