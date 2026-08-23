@@ -1,23 +1,16 @@
-## Breaking Changes
-
-- Now requires the 3DS:ATLAS module, which supplies shared logging, localization, and theming.
-- Raised the minimum Foundry version to 14.
-
 ## New Features
 
-- Reworked the dialog colors to follow the shared ATLAS theme, adding a per-user theme setting that defaults to dark.
+- Initiative updates made by a rolloff are tagged with `options.rollies.rolloffResolution`, so initiative modules can ignore the tiebreak bump.
+- Rolloffs fire a `rollies.rolloffResolved` hook with combatId, mode (pair or bracket), and the winner and losers as plain `{ id, name, img }` data.
 
 ## Bug Fixes
 
-- Manifest update checks now track the latest GitHub release.
+- Initiative tie handling runs only on the ATLAS primary GM instead of every connected GM. Multi-GM worlds no longer get duplicate rolloffs or tie dialogs.
+- The GM tie notification dialog now lists the tied combatants and their initiative values; the list previously rendered empty.
 
 ## Changes
 
-- Bumped bug report form version placeholders to Foundry 14.364 and dnd5e 6.0.0.
-- Removed the hardcoded maximum compatibility cap.
-- Reworked the bug report form to ask for game system and version instead of a fixed D&D version.
-- Updated the issue tracker Discord link to point at the Rollies community.
-
-## Documentation
-
-- Expanded the module browser description to explain the two-way tie dialog, the seeded bracket for three or more tied combatants, and the countdown timers with auto-rolls for absent players.
+- Bumped verified Foundry compatibility from 14.364 to 14.366
+- Changed the MIT LICENSE copyright holder from "Tyler" to "3 Death Saves".
+- Removed a Handlebars debug log that dumped the GM notification dialog context to the console on every render.
+- Removed the dead "solo" rolloff path: the unused player roll dialog template branch, its CSS, an orphaned rolloff-dialog CSS block and the `mode = 'solo'` parameter defaults.
