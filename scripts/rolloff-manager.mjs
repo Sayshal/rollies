@@ -68,10 +68,11 @@ export class RolloffManager {
    * Checks for initiative ties when initiative is updated
    * @param {Combatant} combatant - The updated combatant
    * @param {object} update - Update data
-   * @param {object} _options - Update options
+   * @param {object} options - Update options
    */
-  static _onCombatantUpdate(combatant, update, _options) {
-    if (!update.initiative) return;
+  static _onCombatantUpdate(combatant, update, options) {
+    if (!('initiative' in update)) return;
+    if (options?.rollies?.rolloffResolution) return;
     if (combatant.combat?.started) return;
     setTimeout(() => {
       this._checkForInitiativeTies(combatant.combat);
@@ -134,7 +135,39 @@ export class RolloffManager {
       if (!initiativeGroups[initiative]) initiativeGroups[initiative] = [];
       initiativeGroups[initiative].push(combatant);
     });
-    return Object.values(initiativeGroups).filter((group) => group.length >= 2);
+    return Object.values(initiativeGroups)
+      .map((group) => this._collapseCombatantGroups(group))
+      .filter((group) => group.length >= 2);
+  }
+
+  /**
+   * Reduce a tied bucket so each group of combatants contributes a single entrant
+   * @param {Array<Combatant>} combatants - Combatants sharing one initiative value
+   * @returns {Array<Combatant>} One entrant per group, plus every ungrouped combatant
+   */
+  static _collapseCombatantGroups(combatants) {
+    const seenGroups = new Set();
+    return combatants.filter((combatant) => {
+      const key = this._getGroupingKey(combatant);
+      if (!key) return true;
+      if (seenGroups.has(key)) return false;
+      seenGroups.add(key);
+      return true;
+    });
+  }
+
+  /**
+   * Build the key identifying combatants that act as one
+   * @param {Combatant} combatant - The combatant to key
+   * @returns {string|null} The grouping key, or null when the combatant stands alone
+   */
+  static _getGroupingKey(combatant) {
+    if (combatant.group?.id) return `group:${combatant.group.id}`;
+    const token = combatant.token;
+    if (!token || token.actorLink) return null;
+    const baseActorId = token.baseActor?.id;
+    if (!baseActorId) return null;
+    return `token:${token.disposition}:${baseActorId}`;
   }
 
   /**
