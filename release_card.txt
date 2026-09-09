@@ -1,0 +1,8 @@
+## New Features
+
+- Initiative updates made by a rolloff are tagged with options.rollies.rolloffResolution, so initiative modules can ignore the tiebreak bump.
+- Rolloffs fire a rollies.rolloffResolved hook carrying the combat id, the mode (pair or bracket), and the winner and losers as plain id, name and image data.
+
+## Bug Fixes
+
+- 2 bugs squashed
