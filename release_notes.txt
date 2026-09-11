@@ -1,16 +1,6 @@
-## New Features
-
-- Initiative updates made by a rolloff are tagged with `options.rollies.rolloffResolution`, so initiative modules can ignore the tiebreak bump.
-- Rolloffs fire a `rollies.rolloffResolved` hook with combatId, mode (pair or bracket), and the winner and losers as plain `{ id, name, img }` data.
-
 ## Bug Fixes
 
-- Initiative tie handling runs only on the ATLAS primary GM instead of every connected GM. Multi-GM worlds no longer get duplicate rolloffs or tie dialogs.
-- The GM tie notification dialog now lists the tied combatants and their initiative values; the list previously rendered empty.
-
-## Changes
-
-- Bumped verified Foundry compatibility from 14.364 to 14.366
-- Changed the MIT LICENSE copyright holder from "Tyler" to "3 Death Saves".
-- Removed a Handlebars debug log that dumped the GM notification dialog context to the console on every render.
-- Removed the dead "solo" rolloff path: the unused player roll dialog template branch, its CSS, an orphaned rolloff-dialog CSS block and the `mode = 'solo'` parameter defaults.
+- Combatants in the same combatant group count as one roll-off entrant instead of rolling off against each other.
+- Setting a combatant's initiative to 0 now triggers tie detection.
+- The initiative bump from a resolved roll-off no longer starts a new tie check.
+- Unlinked tokens of the same base actor and disposition that tie on initiative count as one roll-off entrant.
