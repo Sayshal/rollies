@@ -25,14 +25,11 @@ export class WinnerAnnouncementDialog extends HandlebarsApplicationMixin(Applica
     classes: ['rollies-dialog', 'rollies-winner'],
     tag: 'div',
     position: { width: 'auto', height: 'auto' },
-    window: { resizable: false, minimizable: false, title: 'ROLLIES.WinnerDialog.Title' }
+    window: { resizable: false, minimizable: false, title: 'ROLLIES.WinnerDialog.Title', contentClasses: ['standard-form'] }
   };
 
-  /**
-   * Template parts configuration
-   * @type {object}
-   */
-  static PARTS = { div: { template: 'modules/rollies/templates/winner-announcement.hbs' } };
+  /** @inheritdoc */
+  static PARTS = { content: { template: 'modules/rollies/templates/winner-announcement.hbs' }, footer: { template: 'templates/generic/form-footer.hbs' } };
 
   /**
    * Create a new WinnerAnnouncementDialog
@@ -44,7 +41,7 @@ export class WinnerAnnouncementDialog extends HandlebarsApplicationMixin(Applica
   constructor(winner) {
     super();
     this.winner = winner;
-    setTimeout(() => {
+    this.autoCloseId = setTimeout(() => {
       if (this.rendered) this.close();
     }, 3000);
   }
@@ -53,6 +50,13 @@ export class WinnerAnnouncementDialog extends HandlebarsApplicationMixin(Applica
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     context.winner = { name: this.winner.name, img: this.winner.img, initiative: this.winner.initiative };
+    context.buttons = [{ type: 'button', action: 'close', icon: 'fa-solid fa-xmark', label: 'ROLLIES.WinnerDialog.CloseButton' }];
     return context;
+  }
+
+  /** @inheritdoc */
+  _onClose(options) {
+    super._onClose(options);
+    clearTimeout(this.autoCloseId);
   }
 }

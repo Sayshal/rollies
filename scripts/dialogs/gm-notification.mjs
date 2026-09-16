@@ -33,15 +33,12 @@ export class GMNotificationDialog extends HandlebarsApplicationMixin(Application
     classes: ['rollies-dialog', 'rollies-gm-notification'],
     tag: 'div',
     position: { width: 400, height: 'auto' },
-    window: { resizable: false, title: 'ROLLIES.GMDialog.Title' },
+    window: { resizable: false, title: 'ROLLIES.GMDialog.Title', contentClasses: ['standard-form'] },
     actions: { startRolloffs: GMNotificationDialog.#startRolloffs }
   };
 
-  /**
-   * Template parts configuration
-   * @type {object}
-   */
-  static PARTS = { div: { template: 'modules/rollies/templates/gm-notification.hbs' } };
+  /** @inheritdoc */
+  static PARTS = { content: { template: 'modules/rollies/templates/gm-notification.hbs' }, footer: { template: 'templates/generic/form-footer.hbs' } };
 
   /**
    * Create a new GMNotificationDialog
@@ -60,6 +57,10 @@ export class GMNotificationDialog extends HandlebarsApplicationMixin(Application
     context.tieData = this.tieGroups.map((group) => ({ initiative: group[0].initiative, combatants: group.map((c) => ({ name: c.name, img: c.img || c.actor?.img })) }));
     context.totalTies = this.tieGroups.length;
     context.totalCombatants = this.tieGroups.reduce((sum, group) => sum + group.length, 0);
+    context.buttons = [
+      { type: 'button', action: 'startRolloffs', icon: 'fa-solid fa-dice-d20', label: 'ROLLIES.GMDialog.StartRolloffs', default: true },
+      { type: 'button', action: 'close', icon: 'fa-solid fa-xmark', label: 'ROLLIES.GMDialog.KeepInitiative' }
+    ];
     return context;
   }
 

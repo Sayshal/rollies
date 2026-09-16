@@ -4,6 +4,12 @@
  */
 
 /**
+ * Footer close button for rolloff dialogs
+ * @type {object}
+ */
+export const CLOSE_BUTTON = { type: 'button', action: 'close', icon: 'fa-solid fa-xmark', label: 'ATLAS.Common.Close' };
+
+/**
  * Main module configuration object
  * @typedef {object} ModuleConfig
  * @property {string} ID - The module identifier

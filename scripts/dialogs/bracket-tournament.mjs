@@ -3,7 +3,7 @@
  * @module dialogs/bracket-tournament
  */
 
-import { MODULE, hasInteractiveDice } from '../config.mjs';
+import { CLOSE_BUTTON, MODULE, hasInteractiveDice } from '../config.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -17,14 +17,13 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
   static DEFAULT_OPTIONS = {
     id: 'rollies-bracket-tournament',
     classes: ['rollies-dialog', 'rollies-bracket-tournament'],
-    tag: 'form',
     position: { width: 700, height: 'auto' },
-    window: { resizable: false, minimizable: false, title: 'ROLLIES.PlayerDialog.BracketHeader' },
+    window: { resizable: false, minimizable: false, title: 'ROLLIES.PlayerDialog.BracketHeader', contentClasses: ['standard-form'] },
     actions: { roll: BracketTournamentDialog._onRoll }
   };
 
   /** @inheritdoc */
-  static PARTS = { form: { template: 'modules/rollies/templates/bracket-tournament.hbs' } };
+  static PARTS = { content: { template: 'modules/rollies/templates/bracket-tournament.hbs' }, footer: { template: 'templates/generic/form-footer.hbs' } };
 
   /**
    * Create a new BracketTournamentDialog
@@ -85,7 +84,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
     this.timeoutId = setTimeout(() => {
       this._handleTimeout();
     }, timeoutSeconds * 1000);
-    if (this.rendered) this.render({ force: true });
+    if (this.rendered) this.render({ parts: ['content'] });
   }
 
   /**
@@ -216,7 +215,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
     if (!data.rolloffId || !data.rolloffId.startsWith(this.tournamentId)) return;
     const rollKey = `${data.rolloffId}-${data.combatantId}`;
     this.opponentRolls.set(rollKey, { total: data.total, name: data.name, img: data.img });
-    if (this.rendered) this.render({ force: true });
+    if (this.rendered) this.render({ parts: ['content'] });
   }
 
   /**
@@ -246,7 +245,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
       this.isEliminated = true;
       this._clearCountdown();
     }
-    if (this.rendered) this.render({ force: true });
+    if (this.rendered) this.render({ parts: ['content'] });
   }
 
   /**
@@ -322,7 +321,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
       this.currentReject = null;
     }
     this.currentMatchId = null;
-    if (this.rendered) this.render({ force: true });
+    if (this.rendered) this.render({ parts: ['content'] });
   }
 
   /** @inheritdoc */
@@ -333,6 +332,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
     context.isEliminated = this.isEliminated;
     context.timeRemaining = this.timeRemaining;
     context.bracket = this._prepareBracketContext();
+    context.buttons = [CLOSE_BUTTON];
     return context;
   }
 
@@ -385,7 +385,7 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
       this.currentReject = null;
     }
     this.currentMatchId = null;
-    if (this.rendered) this.render({ force: true });
+    if (this.rendered) this.render({ parts: ['content'] });
   }
 
   /**
@@ -405,9 +405,9 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
   }
 
   /** @inheritdoc */
-  static _onClose(_event, _target) {
+  _onClose(options) {
+    super._onClose(options);
     this._cleanup(new Error('Dialog closed by user'));
-    super.close();
   }
 
   /**

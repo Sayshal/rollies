@@ -3,24 +3,9 @@
  * @module dialogs/player-roll
  */
 
-import { MODULE, hasInteractiveDice } from '../config.mjs';
+import { CLOSE_BUTTON, MODULE, hasInteractiveDice } from '../config.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
-
-/**
- * Dialog context data for rendering
- * @typedef {object} PlayerRollContext
- * @property {object} combatant - Combatant display data
- * @property {string} combatant.name - Combatant name
- * @property {string} combatant.img - Combatant image URL
- * @property {string} dieType - Die type to roll
- * @property {boolean} hasRolled - Whether the player has rolled
- * @property {number} timeout - Timeout duration in seconds
- * @property {number} timeRemaining - Seconds remaining in countdown
- * @property {string} rolloffId - Unique rolloff identifier
- * @property {string} mode - Rolloff mode: 'pair'
- * @property {Array<object>} opponents - Opponent data for pair mode
- */
 
 /**
  * Simple dialog for a player to make their rolloff roll (pair mode only)
@@ -31,17 +16,13 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   static DEFAULT_OPTIONS = {
     id: 'rollies-player-roll-dialog',
     classes: ['rollies-dialog', 'rollies-player-roll'],
-    tag: 'form',
     position: { width: 600, height: 'auto' },
-    window: { resizable: false, minimizable: false, title: 'ROLLIES.PlayerDialog.Title' },
+    window: { resizable: false, minimizable: false, title: 'ROLLIES.PlayerDialog.Title', contentClasses: ['standard-form'] },
     actions: { roll: PlayerRollDialog._onRoll }
   };
 
-  /**
-   * Template parts configuration
-   * @type {object}
-   */
-  static PARTS = { form: { template: 'modules/rollies/templates/player-roll.hbs' } };
+  /** @inheritdoc */
+  static PARTS = { content: { template: 'modules/rollies/templates/player-roll.hbs' }, footer: { template: 'templates/generic/form-footer.hbs' } };
 
   /**
    * Create a new PlayerRollDialog (for pair mode)
@@ -91,7 +72,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     if (data.rolloffId !== this.rolloffId) return;
     const rollKey = `${data.rolloffId}-${data.combatantId}`;
     this.opponentRolls.set(rollKey, { total: data.total, name: data.name, img: data.img });
-    if (this.rendered) this.render();
+    if (this.rendered) this.render({ parts: ['content'] });
   }
 
   /**
@@ -127,17 +108,12 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   /** @inheritdoc */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
-    context.combatant = {
-      id: this.combatant.id,
-      name: this.combatant.name,
-      img: this.combatant.img || this.combatant.actor?.img
-    };
+    context.combatant = { name: this.combatant.name, img: this.combatant.img || this.combatant.actor?.img };
     context.dieType = this.dieType;
     context.hasRolled = this.hasRolled;
-    context.timeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
     context.timeRemaining = this.timeRemaining;
-    context.rolloffId = this.rolloffId;
     context.mode = this.mode;
+    context.buttons = [CLOSE_BUTTON];
     if (this.mode === 'pair' && this.opponents.length > 0) context.opponent = { ...this.opponents[0], roll: this.opponentRolls.get(`${this.rolloffId}-${this.opponents[0].id}`) };
     return context;
   }
@@ -155,7 +131,7 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     const roll = await new Roll(`1${this.dieType}`).evaluate();
     this.myRoll = roll.total;
     await this._createRollChatMessage(roll);
-    await this.render();
+    await this.render({ parts: ['content'] });
     setTimeout(() => {
       if (!this.isClosed) {
         this._cleanup();
@@ -166,9 +142,9 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
   }
 
   /** @inheritdoc */
-  static _onClose(_event, _target) {
+  _onClose(options) {
+    super._onClose(options);
     this._cleanup(new Error('Dialog closed by user'));
-    super.close();
   }
 
   /**
