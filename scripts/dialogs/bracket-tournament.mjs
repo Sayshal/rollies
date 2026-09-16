@@ -305,6 +305,10 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
       this.startTime = Date.now();
       this.totalTimeout = baseTimeout;
       this.timeRemaining = baseTimeout;
+      this._clearCountdown();
+      this.countdownInterval = setInterval(() => {
+        this._updateCountdown();
+      }, 1000);
       this.timeoutId = setTimeout(() => {
         this._handleTimeout();
       }, baseTimeout * 1000);
@@ -312,15 +316,11 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
     }
 
     this._clearCountdown();
+    const { matchId, resolve } = this._releaseMatch();
     const roll = await new Roll(`1${this.dieType}`).evaluate({ allowInteractive: false });
-    this.myRolls.set(this.currentMatchId, roll.total);
+    this.myRolls.set(matchId, roll.total);
     await this._createRollChatMessage(roll, true);
-    if (this.currentResolve) {
-      this.currentResolve({ roll: roll, total: roll.total });
-      this.currentResolve = null;
-      this.currentReject = null;
-    }
-    this.currentMatchId = null;
+    resolve?.({ roll: roll, total: roll.total });
     if (this.rendered) this.render({ parts: ['content'] });
   }
 
@@ -376,16 +376,25 @@ export class BracketTournamentDialog extends HandlebarsApplicationMixin(Applicat
       clearTimeout(this.timeoutId);
       this.timeoutId = null;
     }
+    const { matchId, resolve } = this._releaseMatch();
     const roll = await new Roll(`1${this.dieType}`).evaluate();
-    this.myRolls.set(this.currentMatchId, roll.total);
+    this.myRolls.set(matchId, roll.total);
     await this._createRollChatMessage(roll);
-    if (this.currentResolve) {
-      this.currentResolve({ roll: roll, total: roll.total });
-      this.currentResolve = null;
-      this.currentReject = null;
-    }
-    this.currentMatchId = null;
+    resolve?.({ roll: roll, total: roll.total });
     if (this.rendered) this.render({ parts: ['content'] });
+  }
+
+  /**
+   * Clear the active match before rolling so a second roll for it is ignored
+   * @returns {{matchId: string, resolve: Function|null}} The released match id and its resolve callback
+   * @private
+   */
+  _releaseMatch() {
+    const released = { matchId: this.currentMatchId, resolve: this.currentResolve };
+    this.currentMatchId = null;
+    this.currentResolve = null;
+    this.currentReject = null;
+    return released;
   }
 
   /**

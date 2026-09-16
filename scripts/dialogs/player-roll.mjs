@@ -128,6 +128,10 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
     if (this.hasRolled || this.isClosed) return;
     this.hasRolled = true;
     this._clearCountdown();
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
     const roll = await new Roll(`1${this.dieType}`).evaluate();
     this.myRoll = roll.total;
     await this._createRollChatMessage(roll);
@@ -161,12 +165,17 @@ export class PlayerRollDialog extends HandlebarsApplicationMixin(ApplicationV2) 
       this.startTime = Date.now();
       this.totalTimeout = baseTimeout;
       this.timeRemaining = baseTimeout;
+      this._clearCountdown();
+      this.countdownInterval = setInterval(() => {
+        this._updateCountdown();
+      }, 1000);
       this.timeoutId = setTimeout(() => {
         this._handleTimeout();
       }, baseTimeout * 1000);
       return;
     }
 
+    this.hasRolled = true;
     this._clearCountdown();
     const roll = await new Roll(`1${this.dieType}`).evaluate({ allowInteractive: false });
     this.myRoll = roll.total;

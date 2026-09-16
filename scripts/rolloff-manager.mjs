@@ -282,7 +282,7 @@ export class RolloffManager {
         const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
         const multiplier = game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER);
         const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
-          timeout: baseTimeout * multiplier * 1000
+          timeout: (baseTimeout * multiplier + baseTimeout) * 1000 + 5000
         });
         await this._broadcastRollUpdate(rolloffId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
@@ -413,7 +413,7 @@ export class RolloffManager {
       try {
         const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
         const multiplier = game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER);
-        const timeout = baseTimeout * multiplier * 1000;
+        const timeout = (baseTimeout * multiplier + baseTimeout) * 1000 + 5000;
         const result = await owner.query(`${MODULE.ID}.activateMatch`, { matchId: match.matchId, tournamentId: tournamentId }, { timeout: timeout });
         await this._broadcastRollUpdate(match.matchId, combatant, result.total);
         return { combatant, roll: Roll.fromData(result.roll), total: result.total };
