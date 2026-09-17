@@ -1,6 +1,11 @@
 ## Bug Fixes
 
-- Combatants in the same combatant group count as one roll-off entrant instead of rolling off against each other.
-- Setting a combatant's initiative to 0 now triggers tie detection.
-- The initiative bump from a resolved roll-off no longer starts a new tie check.
-- Unlinked tokens of the same base actor and disposition that tie on initiative count as one roll-off entrant.
+- Close buttons on the player roll, bracket tournament, GM tie notification, and winner announcement dialogs now close the dialog.
+- Closing a player roll or bracket dialog by any means now stops its countdown and has the GM auto-roll for that player.
+- Players using manual dice no longer get a second roll when their roll-off or bracket match times out.
+- The dialog countdown now restarts when the manual dice warning period begins.
+- The GM now waits through the full manual dice grace period before auto-rolling for a player.
+
+## Changes
+
+- Dialog buttons now use the standard Foundry footer style.
