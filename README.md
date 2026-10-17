@@ -38,6 +38,8 @@ Rollies monitors initiative rolls and instantly identifies ties:
 - **GM Control**: Choose between automatic rolloffs or manual approval via notification dialog
 - **Multiple Ties**: Handles multiple different initiative values with ties simultaneously
 
+<img src="https://wiki.3deathsaves.com/rollies/gm-notification.png" alt="Initiative tie notification" width="400">
+
 ### Rolloff Modes
 
 Different situations call for different solutions:
@@ -50,6 +52,8 @@ Perfect for two-combatant ties with a head-to-head interface:
 - **Live Updates**: See opponent rolls as they happen
 - **Visual Polish**: Distinct styling for "you vs them" clarity
 
+<img src="https://wiki.3deathsaves.com/rollies/pair-rolloff.png" alt="Pair rolloff dialog" width="500">
+
 #### Bracket Mode (Tournament)
 
 For 3+ combatants tied at the same initiative:
@@ -59,6 +63,8 @@ For 3+ combatants tied at the same initiative:
 - **Spectator Mode**: Eliminated players watch remaining matches
 - **Progressive Resolution**: Matches resolve sequentially, building suspense
 
+<img src="https://wiki.3deathsaves.com/rollies/bracket-rolloff.png" alt="Tournament bracket rolloff" width="500">
+
 ### Player Experience
 
 Engaging interfaces that make rolling fun:
@@ -67,6 +73,8 @@ Engaging interfaces that make rolling fun:
 - **Auto-Roll Fallback**: AFK players get automatic rolls after timeout
 - **Roll Visualization**: See exactly what you and opponents rolled
 - **Winner Announcements**: Celebratory popups for rolloff victors
+
+<img src="https://wiki.3deathsaves.com/rollies/winner-announcement.png" alt="Rolloff winner announcement" width="250">
 
 ### GM Tools
 
@@ -81,6 +89,7 @@ Complete control over rolloff behavior:
 ## Installation
 
 Get Rollies through Foundry's Module Manager or The Forge's Bazaar for instant setup.
+
 
 ### Manual Installation
 
