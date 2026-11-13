@@ -1,0 +1,87 @@
+{{#if minimized}}
+  <button type='button' class='rk-pill' data-action='restore'>
+    <span class='rk-pill-title'>{{title}}</span>
+    <span class='rk-pill-status'>{{status.label}}</span>
+    <strong class='rk-pill-value' {{#if status.countdown}}data-countdown{{/if}}>{{status.value}}</strong>
+  </button>
+{{else}}
+  <div class='rk-screen{{#if intro}} is-intro{{/if}}'>
+    <header class='rk-head'>
+      <div class='rk-status'>
+        <span class='rk-status-label'>{{status.label}}</span>
+        <strong class='rk-status-value' {{#if status.countdown}}data-countdown{{/if}}>{{status.value}}</strong>
+      </div>
+      <div class='rk-title'>
+        <h2>{{title}}</h2>
+        <p>{{subtitle}}</p>
+      </div>
+      <div class='rk-actions'>
+        {{#if done}}
+          <button type='button' data-action='dismiss'><i class='fa-solid fa-xmark' inert></i>{{localize 'ROLLIES.Knockout.Close'}}</button>
+        {{else}}
+          <button type='button' data-action='minimize'><i class='fa-solid fa-window-minimize' inert></i>{{localize 'ROLLIES.Knockout.Minimize'}}</button>
+        {{/if}}
+      </div>
+    </header>
+
+    <div class='rk-arena'>
+      <div class='rk-board' style='width: {{board.width}}px; height: {{board.height}}px'>
+        <svg class='rk-wires' width='{{board.width}}' height='{{board.height}}' aria-hidden='true'>
+          {{#each wires}}
+            <path class='rk-wire {{state}}{{#if fresh}} is-fresh{{/if}}' d='{{d}}' {{#if fresh}}pathLength='1'{{/if}} />
+          {{/each}}
+        </svg>
+
+        {{#each labels}}
+          <div class='rk-label{{#if current}} is-current{{/if}}' style='left: {{x}}px; top: {{y}}px; width: {{width}}px'>{{text}}</div>
+        {{/each}}
+
+        {{#each slots}}
+          <div class='rk-slot {{classes}}' style='left: {{x}}px; top: {{y}}px; width: {{width}}px; height: {{height}}px; --order: {{order}}; --from: {{from}}'>
+            {{#if placeholder}}
+              <span class='rk-placeholder'>{{placeholder}}</span>
+            {{else}}
+              <span class='rk-seed'>{{seed}}</span>
+              {{#if img}}
+                <img class='rk-art' src='{{img}}' alt='' />
+              {{else}}
+                <span class='rk-art' aria-hidden='true'>{{initial}}</span>
+              {{/if}}
+              <span class='rk-who'>
+                <span class='rk-name' data-tooltip='{{name}}'>{{name}}</span>
+                {{#if meta}}<span class='rk-meta'>{{meta}}</span>{{/if}}
+              </span>
+              <span class='rk-result'>
+                {{#if canRoll}}
+                  <button type='button' class='rk-roll-button' data-action='roll' data-entrant='{{c}}'>{{rollLabel}}</button>
+                {{else}}
+                  {{#if note}}<small class='rk-note'>{{note}}</small>{{/if}}
+                  {{#if waiting}}<small class='rk-note' data-tooltip='{{waiting.tooltip}}'><i class='fa-solid fa-hourglass-half' inert></i> {{waiting.name}}</small>{{/if}}
+                  {{#if hasRoll}}<span class='rk-roll' {{#if tick}}data-tick='{{roll}}'{{/if}}>{{roll}}</span>{{/if}}
+                {{/if}}
+              </span>
+            {{/if}}
+          </div>
+        {{/each}}
+
+        <div class='rk-champion{{#if champion.decided}} is-decided{{/if}}{{#if champion.crowned}} is-crowned{{/if}}' style='left: {{champion.x}}px; top: {{champion.y}}px; width: {{champion.width}}px; height: {{champion.height}}px'>
+          <span class='rk-champion-label'>{{localize 'ROLLIES.Knockout.GoesFirst'}}</span>
+          <span class='rk-champion-name'>{{champion.name}}</span>
+        </div>
+      </div>
+    </div>
+
+    <footer class='rk-standings'>
+      <ol aria-label='{{localize "ROLLIES.Knockout.Standings"}}'>
+        {{#each standings}}
+          <li class='{{#if first}}is-first{{/if}}{{#if pending}}is-pending{{/if}}'>
+            <span class='rk-place'>{{place}}</span>
+            {{#if name}}<span class='rk-standing-name'>{{name}}</span>{{/if}}
+            <span class='rk-initiative'>{{initiative}}</span>
+            {{#if why}}<span class='rk-why'>{{why}}</span>{{/if}}
+          </li>
+        {{/each}}
+      </ol>
+    </footer>
+  </div>
+{{/if}}

@@ -1,50 +1,35 @@
 /**
- * Main manager for handling initiative rolloffs
+ * Detects initiative ties and runs knockout rolloffs from the primary GM's client
  * @module rolloff-manager
  */
 
-import { GMNotificationDialog } from './dialogs/gm-notification.mjs';
+import { createBracket, initiativeFor, openMatches, placeRound } from './bracket.mjs';
+import { createResultsMessage, createRollMessage } from './chat.mjs';
 import { MODULE } from './config.mjs';
+import { GMNotificationDialog } from './dialogs/gm-notification.mjs';
+import { KnockoutOverlay } from './dialogs/knockout-overlay.mjs';
+
+/** Milliseconds the overlay's entrance plays before the first roll */
+const INTRO_DELAY = 1400;
+
+/** Milliseconds between rounds so the winners' lines can draw */
+const ROUND_DELAY = 1100;
+
+/** Milliseconds a tied match stays on screen before the re-roll */
+const TIE_DELAY = 1200;
 
 /**
- * Rolloff tracking data
- * @typedef {object} RolloffData
- * @property {Combat} combat - The combat encounter
- * @property {Array<Combatant>} combatants - Array of tied combatants
- * @property {string} mode - Rolloff mode: 'pair' or 'bracket'
- * @property {Map<string, object>} rolls - Map of combatant IDs to roll results
- * @property {object} [bracket] - Bracket structure for bracket mode
- * @property {Map<string, BracketTournamentDialog>} [dialogs] - Map of user IDs to their tournament dialogs
- */
-
-/**
- * Roll result from a combatant
- * @typedef {object} CombatantRollResult
- * @property {Combatant} combatant - The combatant who rolled
- * @property {Roll} roll - The Roll object
- * @property {number} total - Total value of the roll
- */
-
-/**
- * Main manager class for handling initiative rolloffs
- * Tracks active rolloffs and processes initiative ties
+ * Detects initiative ties and runs knockout rolloffs
  */
 export class RolloffManager {
   /**
-   * Map of active rolloffs by ID
-   * @type {Map<string, RolloffData>}
-   */
-  static activeRolloffs = new Map();
-
-  /**
-   * Set of combat IDs that have been processed
+   * Combat IDs whose ties have already been handled
    * @type {Set<string>}
    */
   static processedCombats = new Set();
 
   /**
-   * Initialize the rolloff manager
-   * Registers hooks for combat events
+   * Register combat hooks on every client
    */
   static initialize() {
     Hooks.on('updateCombatant', this._onCombatantUpdate.bind(this));
@@ -53,19 +38,16 @@ export class RolloffManager {
   }
 
   /**
-   * Handle combat deletion
-   * Cleans up tracked data for the deleted combat
+   * Forget a deleted combat and close its overlay
    * @param {Combat} combat - The deleted combat encounter
-   * @param {object} _options - Deletion options
    */
-  static _onCombatDelete(combat, _options) {
+  static _onCombatDelete(combat) {
     this.processedCombats.delete(combat.id);
-    this.activeRolloffs.delete(combat.id);
+    KnockoutOverlay.dismiss(combat.id);
   }
 
   /**
-   * Handle combatant update
-   * Checks for initiative ties when initiative is updated
+   * Check for ties when a combatant's initiative changes before combat starts
    * @param {Combatant} combatant - The updated combatant
    * @param {object} update - Update data
    * @param {object} options - Update options
@@ -74,26 +56,20 @@ export class RolloffManager {
     if (!('initiative' in update)) return;
     if (options?.rollies?.rolloffResolution) return;
     if (combatant.combat?.started) return;
-    setTimeout(() => {
-      this._checkForInitiativeTies(combatant.combat);
-    }, 200);
+    setTimeout(() => this._checkForInitiativeTies(combatant.combat), 200);
   }
 
   /**
-   * Handle combatant creation
-   * Checks for initiative ties when new combatant is added
+   * Check for ties when a combatant joins before combat starts
    * @param {Combatant} combatant - The created combatant
-   * @param {object} _options - Creation options
    */
-  static _onCombatantCreate(combatant, _options) {
+  static _onCombatantCreate(combatant) {
     if (combatant.combat?.started) return;
-    setTimeout(() => {
-      this._checkForInitiativeTies(combatant.combat);
-    }, 300);
+    setTimeout(() => this._checkForInitiativeTies(combatant.combat), 300);
   }
 
   /**
-   * Check for initiative ties in a combat encounter
+   * Find ties once every relevant combatant has rolled initiative
    * @param {Combat} combat - The combat encounter to check
    */
   static _checkForInitiativeTies(combat) {
@@ -111,33 +87,23 @@ export class RolloffManager {
   }
 
   /**
-   * Get relevant combatants based on settings
+   * Combatants that take part in rolloffs, per the NPC setting
    * @param {Combat} combat - The combat encounter
-   * @returns {Array<Combatant>} Filtered array of combatants
+   * @returns {Array<Combatant>} Relevant combatants
    */
   static _getRelevantCombatants(combat) {
     const includeNPCs = game.settings.get(MODULE.ID, MODULE.SETTINGS.INCLUDE_NPCS);
-    return combat.combatants.filter((combatant) => {
-      if (includeNPCs) return true;
-      return combatant.actor?.type === 'character';
-    });
+    return combat.combatants.filter((combatant) => includeNPCs || combatant.actor?.type === 'character');
   }
 
   /**
-   * Find groups of combatants with tied initiative
-   * @param {Array<Combatant>} combatants - Array of combatants to check
-   * @returns {Array<Array<Combatant>>} Array of tie groups (each group has 2+ combatants)
+   * Group combatants sharing an initiative value
+   * @param {Array<Combatant>} combatants - Combatants to check
+   * @returns {Array<Array<Combatant>>} Tie groups of two or more
    */
   static _findTieGroups(combatants) {
-    const initiativeGroups = {};
-    combatants.forEach((combatant) => {
-      const initiative = combatant.initiative;
-      if (!initiativeGroups[initiative]) initiativeGroups[initiative] = [];
-      initiativeGroups[initiative].push(combatant);
-    });
-    return Object.values(initiativeGroups)
-      .map((group) => this._collapseCombatantGroups(group))
-      .filter((group) => group.length >= 2);
+    const initiativeGroups = Map.groupBy(combatants, (combatant) => combatant.initiative);
+    return [...initiativeGroups.values()].map((group) => this._collapseCombatantGroups(group)).filter((group) => group.length >= 2);
   }
 
   /**
@@ -171,321 +137,179 @@ export class RolloffManager {
   }
 
   /**
-   * Handle detected initiative ties
-   * Either auto-starts rolloffs or notifies GM based on settings
+   * Start rolloffs, or ask the GM first when auto-rolloff is off
    * @param {Combat} combat - The combat encounter
-   * @param {Array<Array<Combatant>>} tieGroups - Array of tie groups
+   * @param {Array<Array<Combatant>>} tieGroups - Tie groups
    */
   static _handleInitiativeTies(combat, tieGroups) {
     if (!ATLAS.isPrimaryGM) return;
-    const autoRolloff = game.settings.get(MODULE.ID, MODULE.SETTINGS.AUTO_ROLLOFF);
-    if (autoRolloff) tieGroups.forEach((group) => this._startRolloffForGroup(combat, group));
-    else this._notifyGMOfTies(combat, tieGroups);
+    if (game.settings.get(MODULE.ID, MODULE.SETTINGS.AUTO_ROLLOFF)) this.manuallyStartRolloffs(combat, tieGroups);
+    else new GMNotificationDialog(combat, tieGroups).render(true);
   }
 
   /**
-   * Get dexterity score for a combatant
+   * Run each tie group's knockout in turn, so only one overlay shows at a time
+   * @param {Combat} combat - The combat encounter
+   * @param {Array<Array<Combatant>>} tieGroups - Tie groups
+   * @returns {Promise<void>}
+   */
+  static async manuallyStartRolloffs(combat, tieGroups) {
+    for (const [i, group] of tieGroups.entries()) {
+      try {
+        await this._runKnockout(combat, group);
+      } catch (error) {
+        ATLAS.log(1, 'Error in rolloff:', error);
+      }
+      if (i < tieGroups.length - 1) await this._pause(KnockoutOverlay.linger + 400);
+    }
+  }
+
+  /**
+   * Dexterity score used for seeding
    * @param {Combatant} combatant - The combatant
-   * @returns {number} The dexterity score
+   * @returns {number|null} The dexterity score, or null when the system has none
    */
   static _getDexterity(combatant) {
-    const actor = combatant.actor;
-    if (!actor) return 0;
-    return actor.system?.abilities?.dex?.value || 0;
+    return combatant.actor?.system?.abilities?.dex?.value ?? null;
   }
 
   /**
-   * Start a rolloff for a group of tied combatants
+   * Play a full knockout for one tie group and apply the resulting initiative
    * @param {Combat} combat - The combat encounter
-   * @param {Array<Combatant>} tiedCombatants - Array of tied combatants
+   * @param {Array<Combatant>} tied - Tied combatants
    * @returns {Promise<void>}
    */
-  static async _startRolloffForGroup(combat, tiedCombatants) {
-    const rolloffId = `${combat.id}-${tiedCombatants[0].initiative}-${Date.now()}`;
-    if (this.activeRolloffs.has(rolloffId)) return;
-    const mode = tiedCombatants.length === 2 ? 'pair' : 'bracket';
-    this.activeRolloffs.set(rolloffId, { combat, combatants: tiedCombatants, mode, rolls: new Map() });
-    try {
-      if (mode === 'pair') await this._conductPairRolloff(combat, tiedCombatants, rolloffId);
-      else await this._conductBracketRolloff(combat, tiedCombatants, rolloffId);
-    } catch (error) {
-      ATLAS.log(1, 'Error in rolloff:', error);
-    } finally {
-      this.activeRolloffs.delete(rolloffId);
+  static async _runKnockout(combat, tied) {
+    const entrants = [...tied]
+      .sort((a, b) => (this._getDexterity(b) ?? 0) - (this._getDexterity(a) ?? 0))
+      .map((c, i) => ({ id: c.id, name: c.name, img: c.img || c.actor?.img || null, dex: this._getDexterity(c), seed: i + 1, hidden: c.hidden }));
+    const die = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
+    const bracket = createBracket({ id: foundry.utils.randomID(), combatId: combat.id, base: tied[0].initiative, die, entrants });
+    this._broadcast(bracket);
+    await this._pause(INTRO_DELAY);
+    while (bracket.current < bracket.R) {
+      const r = bracket.current;
+      await Promise.all(openMatches(bracket, r).map((seats) => this._playMatch(bracket, r, seats)));
+      if (!game.combats.has(combat.id)) return;
+      placeRound(bracket, r, () => Math.ceil(CONFIG.Dice.randomUniform() * 20));
+      bracket.current++;
+      this._broadcast(bracket);
+      if (bracket.current < bracket.R) await this._pause(ROUND_DELAY);
     }
+    await this._applyResults(combat, bracket);
+    bracket.done = true;
+    this._broadcast(bracket);
   }
 
   /**
-   * Broadcast a roll update to all active users
-   * @param {string} rolloffId - The rolloff/match ID
-   * @param {Combatant} combatant - The combatant who rolled
-   * @param {number} total - The roll total
+   * Roll one match until it has a winner, then advance the winner
+   * @param {object} bracket - The bracket, mutated
+   * @param {number} r - Round index
+   * @param {Array<number>} seats - Seat indices of the match
    * @returns {Promise<void>}
-   * @private
    */
-  static async _broadcastRollUpdate(rolloffId, combatant, total) {
-    const updateData = { rolloffId, combatantId: combatant.id, total, name: combatant.name, img: combatant.img || combatant.actor?.img };
-    for (const user of game.users) {
-      if (user.active && !user.isGM) {
-        try {
-          await user.query(`${MODULE.ID}.rollUpdate`, updateData, { timeout: 1000 });
-        } catch {
-          // Silent fail for broadcast - non-critical
-        }
-      }
+  static async _playMatch(bracket, r, [ka, kb]) {
+    const pair = [bracket.rounds[r][ka], bracket.rounds[r][kb]];
+    for (;;) {
+      bracket.rolling.push(...pair.map((seat) => seat.c));
+      this._broadcast(bracket);
+      await Promise.all(
+        pair.map(async (seat) => {
+          seat.roll = await this._rollFor(bracket, seat.c);
+          bracket.rolling = bracket.rolling.filter((c) => c !== seat.c);
+          this._broadcast(bracket);
+        })
+      );
+      if (!game.combats.has(bracket.combatId)) return;
+      if (pair[0].roll !== pair[1].roll) break;
+      await this._pause(TIE_DELAY);
+      pair.forEach((seat) => {
+        seat.tie = seat.roll;
+        delete seat.roll;
+      });
     }
+    const [winner, loser] = pair[0].roll > pair[1].roll ? pair : [pair[1], pair[0]];
+    winner.result = 'won';
+    loser.result = 'lost';
+    bracket.rounds[r + 1][ka >> 1].c = winner.c;
+    bracket.eliminated.push({ c: loser.c, round: r, roll: loser.roll });
+    this._broadcast(bracket);
   }
 
   /**
-   * Broadcast match completion to all users
-   * @param {string} tournamentId - The tournament ID
-   * @param {string} matchId - The match ID
-   * @param {object} winner - Winner data
-   * @param {object} loser - Loser data
-   * @returns {Promise<void>}
-   * @private
+   * Get one entrant's roll: their owner rolls in the overlay, anyone else is rolled for
+   * @param {object} bracket - The bracket
+   * @param {number} c - Entrant index
+   * @returns {Promise<number>} The roll total
    */
-  static async _broadcastMatchComplete(tournamentId, matchId, winner, loser) {
-    const updateData = { tournamentId, matchId, winner, loser };
-    for (const user of game.users) {
-      if (user.active && !user.isGM) {
-        try {
-          await user.query(`${MODULE.ID}.matchComplete`, updateData, { timeout: 1000 });
-        } catch {
-          // Silent fail for broadcast - non-critical
-        }
-      }
-    }
-  }
-
-  /**
-   * Conduct a rolloff between two combatants
-   * @param {Combat} combat - The combat encounter
-   * @param {Array<Combatant>} tiedCombatants - Array of 2 tied combatants
-   * @param {string} rolloffId - Unique rolloff identifier
-   * @returns {Promise<void>}
-   */
-  static async _conductPairRolloff(combat, tiedCombatants, rolloffId) {
-    const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
-    const opponentsData = tiedCombatants.map((c) => ({ id: c.id, name: c.name, img: c.img || c.actor?.img, userId: this._getOwnerUser(c)?.id }));
-    const rollPromises = tiedCombatants.map(async (combatant, index) => {
-      const opponents = [opponentsData[1 - index]];
-      const owner = this._getOwnerUser(combatant);
-      if (!owner) {
-        const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
-        await this._createAutoRollChatMessage(combatant, roll);
-        await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
-        return { combatant, roll: roll, total: roll.total };
-      }
+  static async _rollFor(bracket, c) {
+    const entrant = bracket.entrants[c];
+    const combatant = game.combats.get(bracket.combatId)?.combatants.get(entrant.id);
+    const owner = combatant ? this._getOwnerUser(combatant) : null;
+    if (owner) {
+      const base = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
+      const multiplier = game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER);
+      const timeout = (base * multiplier + base) * 1000 + 5000;
+      let timer;
       try {
-        const queryData = { combatantId: combatant.id, dieType: dieType, rolloffId: rolloffId, mode: 'pair', opponents: opponents };
-        const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
-        const multiplier = game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER);
-        const result = await owner.query(`${MODULE.ID}.requestRoll`, queryData, {
-          timeout: (baseTimeout * multiplier + baseTimeout) * 1000 + 5000
-        });
-        await this._broadcastRollUpdate(rolloffId, combatant, result.total);
-        return { combatant, roll: Roll.fromData(result.roll), total: result.total };
-      } catch {
-        const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
-        await this._createAutoRollChatMessage(combatant, roll);
-        await this._broadcastRollUpdate(rolloffId, combatant, roll.total);
-        return { combatant, roll: roll, total: roll.total };
+        // Core passes the timeout to the server but never rejects on the client, so race it here
+        const result = await Promise.race([
+          owner.query(`${MODULE.ID}.knockoutRoll`, { bracket, entrant: c }, { timeout }),
+          new Promise((_resolve, reject) => (timer = setTimeout(() => reject(new Error('Timed out')), timeout)))
+        ]);
+        return result.total;
+      } catch (error) {
+        ATLAS.log(3, `No roll from ${owner.name} for ${entrant.name}, rolling for them:`, error);
+      } finally {
+        clearTimeout(timer);
       }
-    });
-    const results = await Promise.all(rollPromises);
-    await this._resolveRolloff(combat, results, rolloffId);
+    }
+    if (!game.combats.has(bracket.combatId)) return 0;
+    const roll = await new Roll(`1${bracket.die}`).evaluate({ allowInteractive: false });
+    await createRollMessage(entrant, combatant, roll, true);
+    return roll.total;
   }
 
   /**
-   * Build bracket structure
-   * @param {Array<Combatant>} combatants - Array of tied combatants
-   * @param {string} baseTournamentId - Base tournament ID
-   * @returns {object} Bracket structure
-   */
-  static _buildBracket(combatants, baseTournamentId) {
-    const sorted = [...combatants].sort((a, b) => this._getDexterity(a) - this._getDexterity(b));
-    const bracket = {
-      rounds: [],
-      combatants: sorted.map((c) => ({ id: c.id, name: c.name, img: c.img || c.actor?.img, dex: this._getDexterity(c) }))
-    };
-    bracket.rounds.push({
-      roundNumber: 0,
-      matches: [
-        {
-          matchId: `${baseTournamentId}-r0-m0`,
-          combatant1: { id: sorted[0].id, name: sorted[0].name, img: sorted[0].img || sorted[0].actor?.img },
-          combatant2: { id: sorted[1].id, name: sorted[1].name, img: sorted[1].img || sorted[1].actor?.img },
-          winner: null,
-          loser: null
-        }
-      ]
-    });
-    bracket.rounds.push({
-      roundNumber: 1,
-      matches: [
-        {
-          matchId: `${baseTournamentId}-r1-m0`,
-          combatant1: { id: sorted[2].id, name: sorted[2].name, img: sorted[2].img || sorted[2].actor?.img },
-          combatant2: null,
-          winner: null,
-          loser: null
-        }
-      ]
-    });
-    return bracket;
-  }
-
-  /**
-   * Conduct a bracket-style rolloff for 3+ combatants
+   * Write the final initiative, fire the public hook and post the results card
    * @param {Combat} combat - The combat encounter
-   * @param {Array<Combatant>} tiedCombatants - Array of tied combatants
-   * @param {string} tournamentId - Unique tournament identifier
+   * @param {object} bracket - The decided bracket
    * @returns {Promise<void>}
    */
-  static async _conductBracketRolloff(combat, tiedCombatants, tournamentId) {
-    const bracket = this._buildBracket(tiedCombatants, tournamentId);
-    const rolloffData = this.activeRolloffs.get(tournamentId);
-    if (rolloffData) {
-      rolloffData.bracket = bracket;
-      rolloffData.dialogs = new Map();
-    }
-    for (const combatant of tiedCombatants) {
-      const owner = this._getOwnerUser(combatant);
-      if (owner) {
-        try {
-          await owner.query(`${MODULE.ID}.createBracketDialog`, { combatantId: combatant.id, tournamentId: tournamentId, bracket: bracket }, { timeout: 5000 });
-        } catch {
-          // Silent fail - dialog creation is non-critical
-        }
-      }
-    }
-    const match0 = bracket.rounds[0].matches[0];
-    const combatant1 = tiedCombatants.find((c) => c.id === match0.combatant1.id);
-    const combatant2 = tiedCombatants.find((c) => c.id === match0.combatant2.id);
-    await this._conductBracketMatch(combat, combatant1, combatant2, match0, tournamentId);
-    const match1 = bracket.rounds[1].matches[0];
-    match1.combatant2 = match0.winner;
-    const combatant3 = tiedCombatants.find((c) => c.id === match1.combatant1.id);
-    const winnerFromR0 = tiedCombatants.find((c) => c.id === match0.winner.id);
-    if (!combatant3 || !winnerFromR0) {
-      ATLAS.log(1, 'Failed to find combatants for bracket round 1');
-      ui.notifications.error('ROLLIES.Errors.BracketCombatantNotFound');
-      return;
-    }
-    await this._conductBracketMatch(combat, combatant3, winnerFromR0, match1, tournamentId);
-    const finalWinner = combat.combatants.get(match1.winner.id);
-    const finalLosers = tiedCombatants.filter((c) => c.id !== finalWinner.id);
-    Hooks.callAll(`${MODULE.ID}.rolloffResolved`, { combatId: combat.id, mode: 'bracket', winner: this._toHookData(finalWinner), losers: finalLosers.map((c) => this._toHookData(c)) });
-    const winnerData = { name: finalWinner.name, img: finalWinner.img || finalWinner.actor?.img, initiative: finalWinner.initiative, tournamentId: tournamentId };
+  static async _applyResults(combat, bracket) {
+    const updates = bracket.places.map((place, i) => ({ _id: bracket.entrants[place.c].id, initiative: initiativeFor(bracket, i) })).filter((update) => combat.combatants.has(update._id));
+    await combat.updateEmbeddedDocuments('Combatant', updates, { rollies: { rolloffResolution: true } });
+    const [winner, ...losers] = bracket.places.map((place) => combat.combatants.get(bracket.entrants[place.c].id)).filter(Boolean);
+    Hooks.callAll(`${MODULE.ID}.rolloffResolved`, {
+      combatId: combat.id,
+      mode: bracket.count === 2 ? 'pair' : 'bracket',
+      winner: this._toHookData(winner),
+      losers: losers.map((c) => this._toHookData(c))
+    });
+    await createResultsMessage(bracket);
+  }
+
+  /**
+   * Show the bracket on this client and send it to every other active user
+   * @param {object} bracket - The bracket
+   */
+  static _broadcast(bracket) {
+    if (!game.combats.has(bracket.combatId)) return;
+    const snapshot = foundry.utils.deepClone(bracket);
+    KnockoutOverlay.show(snapshot);
     for (const user of game.users) {
-      if (user.active) {
-        try {
-          await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
-        } catch {
-          // Silent fail - winner announcement is non-critical
-        }
-      }
+      if (!user.active || user.isSelf) continue;
+      user.query(`${MODULE.ID}.knockoutState`, snapshot, { timeout: 5000 }).catch(() => {});
     }
   }
 
   /**
-   * Conduct a single bracket match
-   * @param {Combat} combat - The combat encounter
-   * @param {Combatant} combatant1 - First combatant
-   * @param {Combatant} combatant2 - Second combatant
-   * @param {object} match - Match data object
-   * @param {string} tournamentId - Tournament identifier
-   * @returns {Promise<void>}
-   * @private
-   */
-  static async _conductBracketMatch(combat, combatant1, combatant2, match, tournamentId) {
-    const dieType = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_DIE);
-    const matchCombatants = [combatant1, combatant2];
-    const rollPromises = matchCombatants.map(async (combatant) => {
-      const owner = this._getOwnerUser(combatant);
-      if (!owner) {
-        const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
-        await this._createAutoRollChatMessage(combatant, roll);
-        await this._broadcastRollUpdate(match.matchId, combatant, roll.total);
-        return { combatant, roll, total: roll.total };
-      }
-      try {
-        const baseTimeout = game.settings.get(MODULE.ID, MODULE.SETTINGS.ROLLOFF_TIMEOUT);
-        const multiplier = game.settings.get(MODULE.ID, MODULE.SETTINGS.MANUAL_DICE_TIMEOUT_MULTIPLIER);
-        const timeout = (baseTimeout * multiplier + baseTimeout) * 1000 + 5000;
-        const result = await owner.query(`${MODULE.ID}.activateMatch`, { matchId: match.matchId, tournamentId: tournamentId }, { timeout: timeout });
-        await this._broadcastRollUpdate(match.matchId, combatant, result.total);
-        return { combatant, roll: Roll.fromData(result.roll), total: result.total };
-      } catch {
-        const roll = await new Roll(`1${dieType}`).evaluate({ allowInteractive: false });
-        await this._createAutoRollChatMessage(combatant, roll);
-        await this._broadcastRollUpdate(match.matchId, combatant, roll.total);
-        return { combatant, roll, total: roll.total };
-      }
-    });
-    const matchResults = await Promise.all(rollPromises);
-    const maxTotal = Math.max(...matchResults.map((r) => r.total));
-    const winners = matchResults.filter((r) => r.total === maxTotal);
-    if (winners.length > 1) {
-      ui.notifications.info('ROLLIES.Messages.AnotherTie');
-      await this._conductBracketMatch(combat, combatant1, combatant2, match, tournamentId);
-      return;
-    }
-    const winner = winners[0].combatant;
-    const loser = matchResults.find((r) => r.combatant.id !== winner.id).combatant;
-    const maxPairInitiative = Math.max(combatant1.initiative, combatant2.initiative);
-    const newInitiative = maxPairInitiative + 0.01;
-    await winner.update({ initiative: newInitiative }, { rollies: { rolloffResolution: true } });
-    await this._createWinnerChatMessage(winner, newInitiative);
-    match.winner = { id: winner.id, name: winner.name, img: winner.img || winner.actor?.img };
-    match.loser = { id: loser.id, name: loser.name, img: loser.img || loser.actor?.img };
-    await this._broadcastMatchComplete(tournamentId, match.matchId, match.winner, match.loser);
-  }
-
-  /**
-   * Resolve a rolloff by determining the winner
-   * @param {Combat} combat - The combat encounter
-   * @param {Array<CombatantRollResult>} results - Array of roll results
-   * @param {string} rolloffId - Unique rolloff identifier
+   * Wait a beat
+   * @param {number} ms - Milliseconds
    * @returns {Promise<void>}
    */
-  static async _resolveRolloff(combat, results, rolloffId) {
-    const maxTotal = Math.max(...results.map((r) => r.total));
-    const winners = results.filter((r) => r.total === maxTotal);
-    if (winners.length > 1) {
-      ui.notifications.info('ROLLIES.Messages.AnotherTie');
-      const tiedCombatants = winners.map((w) => w.combatant);
-      await this._conductPairRolloff(combat, tiedCombatants, `${rolloffId}-explode`);
-      return;
-    }
-    const winner = winners[0].combatant;
-    const losers = results.filter((r) => r.combatant.id !== winner.id).map((r) => r.combatant);
-    await this._applyRolloffWinner(combat, winner, losers);
-  }
-
-  /**
-   * Apply the rolloff winner by updating their initiative
-   * @param {Combat} combat - The combat encounter
-   * @param {Combatant} winner - The winning combatant
-   * @param {Array<Combatant>} losers - The defeated combatants
-   * @returns {Promise<void>}
-   */
-  static async _applyRolloffWinner(combat, winner, losers) {
-    const newInitiative = winner.initiative + 0.01;
-    await winner.update({ initiative: newInitiative }, { rollies: { rolloffResolution: true } });
-    Hooks.callAll(`${MODULE.ID}.rolloffResolved`, { combatId: combat.id, mode: 'pair', winner: this._toHookData(winner), losers: losers.map((c) => this._toHookData(c)) });
-    await this._createWinnerChatMessage(winner, newInitiative);
-    const winnerData = { name: winner.name, img: winner.img || winner.actor?.img, initiative: newInitiative };
-    for (const user of game.users) {
-      if (user.active) {
-        try {
-          await user.query(`${MODULE.ID}.showWinner`, { winner: winnerData }, { timeout: 5000 });
-        } catch {
-          // Silent fail - winner announcement is non-critical
-        }
-      }
-    }
+  static _pause(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -498,60 +322,12 @@ export class RolloffManager {
   }
 
   /**
-   * Get the owner user for a combatant
+   * The active non-GM owner who rolls for a combatant
    * @param {Combatant} combatant - The combatant
-   * @returns {User|null} The owner user or null if none found
+   * @returns {User|undefined} The owner, if one is online
    */
   static _getOwnerUser(combatant) {
-    if (!combatant.actor) return null;
+    if (!combatant.actor) return undefined;
     return game.users.find((user) => user.active && !user.isGM && combatant.actor.testUserPermission(user, 'OWNER'));
-  }
-
-  /**
-   * Create a chat message for an automatic roll
-   * @param {Combatant} combatant - The combatant who was auto-rolled for
-   * @param {Roll} roll - The Roll object
-   * @returns {Promise<ChatMessage>} The created chat message
-   */
-  static async _createAutoRollChatMessage(combatant, roll) {
-    const content = `<div class="rollies-roll-message">
-      <strong>${combatant.name}</strong> ${_loc('ROLLIES.Chat.RolledFor')} ${_loc('ROLLIES.Chat.Rolloff')}:
-      ${roll.total} (${_loc('ROLLIES.Chat.AutoRoll')})
-    </div>`;
-    return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker({ actor: combatant.actor }), style: CONST.CHAT_MESSAGE_STYLES.OTHER, rolls: [roll] });
-  }
-
-  /**
-   * Create a chat message announcing the rolloff winner
-   * @param {Combatant} winner - The winning combatant
-   * @param {number} _newInitiative - The winner's new initiative value
-   * @returns {Promise<ChatMessage>} The created chat message
-   */
-  static async _createWinnerChatMessage(winner, _newInitiative) {
-    const content = `<div class="rollies-winner-message">
-    <h3>${_loc('ROLLIES.Chat.WinnerAnnouncement')}</h3>
-    <p><strong>${winner.name}</strong> ${_loc('ROLLIES.Chat.WinsRolloff')}</p>
-  </div>`;
-    return await ChatMessage.create({ content: content, speaker: ChatMessage.getSpeaker(), style: CONST.CHAT_MESSAGE_STYLES.OTHER });
-  }
-
-  /**
-   * Notify GM of ties via dialog
-   * @param {Combat} combat - The combat encounter
-   * @param {Array<Array<Combatant>>} tieGroups - Array of tie groups
-   */
-  static _notifyGMOfTies(combat, tieGroups) {
-    const dialog = new GMNotificationDialog(combat, tieGroups);
-    dialog.render(true);
-  }
-
-  /**
-   * Manually start rolloffs for tie groups
-   * Called when GM manually triggers rolloffs from notification dialog
-   * @param {Combat} combat - The combat encounter
-   * @param {Array<Array<Combatant>>} tieGroups - Array of tie groups
-   */
-  static manuallyStartRolloffs(combat, tieGroups) {
-    tieGroups.forEach((group) => this._startRolloffForGroup(combat, group));
   }
 }
