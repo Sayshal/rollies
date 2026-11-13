@@ -15,7 +15,7 @@
 
 **Rollies** brings the excitement of Critical Role's initiative rolloffs to your Foundry VTT table. Never let a tie slow down combat again—when two or more combatants roll the same initiative, Rollies automatically detects the tie and prompts players to roll off for the higher position. Fast, fair, and cinematic, just like you see on stream.
 
-The module handles everything from simple 1v1 showdowns to bracket-style tournaments for larger tie groups, with real-time updates showing each participant's rolls as they happen.
+Every tie plays out on a full-screen overlay the whole table watches. Two tied combatants get a head-to-head showdown, and three or more get a seeded knockout bracket.
 
 ## Why Rollies?
 
@@ -36,60 +36,45 @@ Rollies monitors initiative rolls and instantly identifies ties:
 - **Smart Filtering**: Optionally include or exclude NPCs from rolloffs
 - **Pre-Combat Only**: Only triggers before combat starts, never interrupts ongoing battles
 - **GM Control**: Choose between automatic rolloffs or manual approval via notification dialog
-- **Multiple Ties**: Handles multiple different initiative values with ties simultaneously
+- **Multiple Ties**: Each tied initiative value gets its own rolloff, one after another
 
 <img src="https://wiki.3deathsaves.com/rollies/gm-notification.png" alt="Initiative tie notification" width="400">
 
-### Rolloff Modes
+### The Rolloff Overlay
 
-Different situations call for different solutions:
+Every client sees the same full-screen overlay while a tie is rolled off:
 
-#### Pair Mode (1v1)
+- **Showdown**: Two tied combatants face off around a centered "Goes first" plate
+- **Knockout Bracket**: Three or more are seeded by dexterity into an elimination bracket, with byes for the top seeds
+- **Pinwheel Layout**: One half of the bracket flows in from the top left, the other from the bottom right, and both meet at the champion
+- **Parallel Rounds**: Every match in a round rolls at the same time
+- **Full Order**: The champion goes first, and everyone else is placed by the round they fell in and the roll they lost with
+- **Live Standings**: The initiative order fills in along the bottom as rounds finish
+- **Themed by ATLAS**: The overlay follows the theme you pick for Rollies in 3DS:ATLAS
 
-Perfect for two-combatant ties with a head-to-head interface:
+<img src="https://wiki.3deathsaves.com/rollies/pair-rolloff.png" alt="Pair rolloff" width="500">
 
-- **Versus Display**: Face-off view with both combatants side-by-side
-- **Live Updates**: See opponent rolls as they happen
-- **Visual Polish**: Distinct styling for "you vs them" clarity
-
-<img src="https://wiki.3deathsaves.com/rollies/pair-rolloff.png" alt="Pair rolloff dialog" width="500">
-
-#### Bracket Mode (Tournament)
-
-For 3+ combatants tied at the same initiative:
-
-- **Seeded Brackets**: Lowest dexterity fights first, winner advances
-- **Live Tournament View**: All players see the full bracket updating in real-time
-- **Spectator Mode**: Eliminated players watch remaining matches
-- **Progressive Resolution**: Matches resolve sequentially, building suspense
-
-<img src="https://wiki.3deathsaves.com/rollies/bracket-rolloff.png" alt="Tournament bracket rolloff" width="500">
+<img src="https://wiki.3deathsaves.com/rollies/bracket-rolloff.png" alt="Knockout bracket rolloff" width="500">
 
 ### Player Experience
 
-Engaging interfaces that make rolling fun:
-
-- **Countdown Timers**: Visual urgency with color-coded warnings
-- **Auto-Roll Fallback**: AFK players get automatic rolls after timeout
-- **Roll Visualization**: See exactly what you and opponents rolled
-- **Winner Announcements**: Celebratory popups for rolloff victors
-
-<img src="https://wiki.3deathsaves.com/rollies/winner-announcement.png" alt="Rolloff winner announcement" width="250">
+- **Roll Button**: A player's own combatants get a Roll button in their bracket slot
+- **Countdown Timers**: The time left shows in the corner and turns red in the last five seconds
+- **Auto-Roll Fallback**: AFK players are rolled for after the timeout
+- **Minimize**: The overlay folds into a small bar at the top of the screen and opens again with a click
+- **Hidden Combatants**: Players see hidden combatants as "Unknown"
 
 ### GM Tools
-
-Complete control over rolloff behavior:
 
 - **Die Type Selection**: Choose any die (d4, d6, d8, d10, d12, d20, d100)
 - **Timeout Configuration**: Set rolloff duration from 3 to 60 seconds
 - **Enforcement Options**: Auto-trigger or review ties before starting rolloffs
-- **Winner Announcements**: Toggle celebration popups on/off
-- **Chat Integration**: All rolls appear in chat with proper attribution
+- **Hold on the Winner**: Keep the decided bracket on screen for a few seconds
+- **Chat Integration**: Every roll and the final order appear in chat
 
 ## Installation
 
 Get Rollies through Foundry's Module Manager or The Forge's Bazaar for instant setup.
-
 
 ### Manual Installation
 
@@ -109,32 +94,32 @@ Get Rollies through Foundry's Module Manager or The Forge's Bazaar for instant s
    - **Rolloff Die Type**: Choose which die to use (default: d20)
    - **Include NPCs**: Whether NPCs participate in rolloffs
    - **Rolloff Timeout**: How long players have to roll (default: 30 seconds)
-   - **Show Winner Announcements**: Display celebration popups (recommended)
+   - **Hold on the Winner**: Keep the decided bracket on screen for a few seconds (recommended)
 
 ### Using Rollies
 
 1. **Roll Initiative**: Have players roll initiative as normal
 2. **Automatic Detection**: Rollies detects any ties once all combatants have rolled
-3. **Player Rolls**: Players receive dialog prompts to roll their dice
-4. **Resolution**: Winner gets a +0.01 initiative bonus to break the tie
+3. **Player Rolls**: The rolloff overlay opens for everyone and players roll from their bracket slots
+4. **Resolution**: Each finishing place is 0.01 initiative above the next, so the tie is fully broken
 5. **Start Combat**: Begin the encounter with properly ordered initiative
 
 ### For Players
 
 When you're involved in an initiative tie:
 
-1. A dialog appears showing your opponent(s) and the die to roll
-2. Click the Roll button (or wait for auto-roll if AFK)
-3. Watch the results come in from other combatants
-4. Winner is announced and initiative is updated automatically
-5. If another tie occurs, roll again until resolved
+1. The rolloff overlay opens and your combatant's slot shows a Roll button
+2. Click Roll (or wait for the auto-roll if AFK)
+3. Watch the other matches resolve as each roll lands
+4. The winner stamps into the center plate and initiative updates automatically
+5. If a match ties, both sides roll again
 
 ### For GMs
 
 With auto-trigger enabled:
 
 - Rollies handles everything automatically
-- Players receive prompts and roll
+- Players roll from the overlay
 - Initiative updates when rolloffs complete
 
 With auto-trigger disabled:
@@ -171,38 +156,36 @@ All settings are world-level and configurable in Module Settings:
 - **Range**: 3-60 seconds
 - **Description**: How long to wait before auto-rolling for inactive players
 
-#### Show Winner Announcements
+#### Hold on the Winner
 
 - **Default**: Enabled
-- **Description**: Display popup announcements when someone wins a rolloff
+- **Description**: Keep the bracket on screen for a few seconds after the winner is decided
 
 ## How It Works
 
-### Pair Rolloffs (2 Combatants)
+### Showdowns (2 Combatants)
 
-1. Both players see a versus-style dialog
-2. Countdown begins from configured timeout
+1. Everyone sees the showdown overlay
+2. The countdown begins from the configured timeout
 3. Players click Roll when ready (or get auto-rolled)
-4. Results display in real-time as they come in
-5. Higher roll wins; ties roll again
-6. Winner gets +0.01 initiative bonus
+4. Each roll shows as it lands
+5. The higher roll goes first; a tie rolls again
+6. The winner ends 0.01 above the loser
 
-### Bracket Rolloffs (3+ Combatants)
+### Knockout Brackets (3+ Combatants)
 
-1. Combatants are seeded by dexterity (lowest first)
-2. All participants see the full tournament bracket
-3. Matches proceed sequentially:
-   - Round 1: Lowest two dex combatants face off
-   - Round 2: Winner faces the third combatant
-   - Continue until one victor remains
-4. Eliminated players watch in spectator mode
-5. Final winner gets +0.01 initiative bonus
+1. Combatants are seeded by dexterity, highest first
+2. When the field is not 4 or 8, the top seeds take byes into the next round
+3. Every match in a round rolls at the same time, and winners advance
+4. Eliminated players keep watching as spectators
+5. The champion goes first, then the finalist; earlier losers are ordered by their losing roll, and equal losing rolls roll off
+6. Each place ends 0.01 above the next
 
 ### Technical Details
 
 - Initiative ties are detected after all relevant combatants have rolled
 - Only runs before combat starts, never during active combat
-- Uses Foundry's query system for client-server communication
+- The primary GM runs the rolloff and sends each step to every client through Foundry's query system
 - Fully compatible with the D&D 5e system
 - Handles edge cases like duplicate names and missing actors gracefully
 
@@ -221,7 +204,7 @@ All settings are world-level and configurable in Module Settings:
 - Verify that there actually is a tie (Rollies ignores non-ties)
 - Check that combat hasn't been started yet
 
-### Players aren't seeing roll dialogs
+### Players aren't getting a Roll button
 
 - Ensure players have OWNER permission on their characters
 - Check that the player is connected and active
@@ -235,5 +218,5 @@ All settings are world-level and configurable in Module Settings:
 ### Auto-roll isn't working
 
 - Check that the timeout is set appropriately (minimum 3 seconds)
-- Verify players have time to load the dialog before timeout
+- Players whose tab is in the background may be rolled for when the timer ends
 - Try increasing the timeout in settings

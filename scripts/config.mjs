@@ -4,12 +4,6 @@
  */
 
 /**
- * Footer close button for rolloff dialogs
- * @type {object}
- */
-export const CLOSE_BUTTON = { type: 'button', action: 'close', icon: 'fa-solid fa-xmark', label: 'ATLAS.Common.Close' };
-
-/**
  * Main module configuration object
  * @typedef {object} ModuleConfig
  * @property {string} ID - The module identifier
@@ -24,6 +18,7 @@ export const CLOSE_BUTTON = { type: 'button', action: 'close', icon: 'fa-solid f
  * @property {string} INCLUDE_NPCS - Include NPCs setting key
  * @property {string} ROLLOFF_TIMEOUT - Rolloff timeout setting key
  * @property {string} SHOW_WINNER_ANNOUNCEMENT - Show winner announcement setting key
+ * @property {string} MANUAL_DICE_TIMEOUT_MULTIPLIER - Manual dice timeout multiplier setting key
  */
 
 /**

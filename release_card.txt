@@ -1,3 +1,11 @@
+## New Features
+
+- Brackets take any number of tied combatants, seeded by highest Dexterity.
+- Every tied combatant gets a distinct initiative from its finishing place.
+- Players roll from a Roll button in their combatant's bracket slot.
+- The bracket, player roll and winner announcement dialogs are replaced by one full-screen knockout overlay.
+- Two-way ties use a head-to-head showdown layout.
+
 ## Bug Fixes
 
-- 5 bugs squashed
+- 1 bug squashed
