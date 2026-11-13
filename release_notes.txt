@@ -1,11 +1,37 @@
+## New Features
+
+- A chat card lists the final initiative order after each rolloff.
+- A tied match shows the tied roll before it is re-rolled.
+- Brackets take any number of tied combatants, seeded by highest Dexterity.
+- Clicking the minimized bar reopens the overlay.
+- Deleting the combat mid-rolloff closes the overlay.
+- Each tied initiative value runs its own rolloff, one after another.
+- Every client sees the overlay during a rolloff.
+- Every match in a bracket round rolls at the same time.
+- Every tied combatant gets a distinct initiative from its finishing place.
+- Hidden combatants show as unknown to players.
+- Losers in the same bracket round rank by their losing roll.
+- Losers with equal losing rolls in the same round are ordered by an automatic roll-off.
+- Players roll from a Roll button in their combatant's bracket slot.
+- Roll results wait for Dice So Nice dice to settle.
+- Rolloff chat cards are whispered to GMs when a hidden combatant is involved.
+- The bracket, player roll and winner announcement dialogs are replaced by one full-screen knockout overlay.
+- The initiative order fills in along the bottom of the overlay as rounds finish.
+- The overlay can be closed once the winner is decided.
+- The overlay can be minimized to a small bar at the top of the screen while the rolloff runs.
+- The overlay shows which player each pending roll is waiting on.
+- Top seeds in the bracket receive byes.
+- Two-way ties use a head-to-head showdown layout.
+
 ## Bug Fixes
 
-- Close buttons on the player roll, bracket tournament, GM tie notification, and winner announcement dialogs now close the dialog.
-- Closing a player roll or bracket dialog by any means now stops its countdown and has the GM auto-roll for that player.
-- Players using manual dice no longer get a second roll when their roll-off or bracket match times out.
-- The dialog countdown now restarts when the manual dice warning period begins.
-- The GM now waits through the full manual dice grace period before auto-rolling for a player.
+- A rolloff no longer stalls when a player never answers a roll request.
 
 ## Changes
 
-- Dialog buttons now use the standard Foundry footer style.
+- The Show Winner Announcements setting is renamed to Hold on the Winner and keeps the bracket on screen for a few seconds after the winner is decided.
+
+## Documentation
+
+- README adds screenshots for the tie notification, pair rolloff and bracket rolloff.
+- README is rewritten for the rolloff overlay.
