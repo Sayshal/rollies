@@ -1,5 +1,7 @@
 # Rollies
 
+![Rollies Hero](https://wiki.3deathsaves.com/rollies/hero.png)
+
 ![GitHub release](https://img.shields.io/github/v/release/Sayshal/rollies?style=for-the-badge)
 ![GitHub Downloads (specific asset, all releases)](<https://img.shields.io/github/downloads/Sayshal/rollies/module.zip?style=for-the-badge&logo=foundryvirtualtabletop&logoColor=white&logoSize=auto&label=Downloads%20(Total)&color=ff144f>)
 ![GitHub Downloads (specific asset, latest release)](<https://img.shields.io/github/downloads/Sayshal/rollies/latest/module.zip?sort=date&style=for-the-badge&logo=foundryvirtualtabletop&logoColor=white&logoSize=auto&label=Downloads%20(Latest)&color=ff144f>)
