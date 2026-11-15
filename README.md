@@ -76,7 +76,7 @@ Every client sees the same full-screen overlay while a tie is rolled off:
 
 ## Installation
 
-Get Rollies through Foundry's Module Manager or The Forge's Bazaar for instant setup.
+Get Rollies through Foundry's Module Manager.
 
 ### Manual Installation
 

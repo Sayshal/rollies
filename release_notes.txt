@@ -1,37 +1,6 @@
-## New Features
-
-- A chat card lists the final initiative order after each rolloff.
-- A tied match shows the tied roll before it is re-rolled.
-- Brackets take any number of tied combatants, seeded by highest Dexterity.
-- Clicking the minimized bar reopens the overlay.
-- Deleting the combat mid-rolloff closes the overlay.
-- Each tied initiative value runs its own rolloff, one after another.
-- Every client sees the overlay during a rolloff.
-- Every match in a bracket round rolls at the same time.
-- Every tied combatant gets a distinct initiative from its finishing place.
-- Hidden combatants show as unknown to players.
-- Losers in the same bracket round rank by their losing roll.
-- Losers with equal losing rolls in the same round are ordered by an automatic roll-off.
-- Players roll from a Roll button in their combatant's bracket slot.
-- Roll results wait for Dice So Nice dice to settle.
-- Rolloff chat cards are whispered to GMs when a hidden combatant is involved.
-- The bracket, player roll and winner announcement dialogs are replaced by one full-screen knockout overlay.
-- The initiative order fills in along the bottom of the overlay as rounds finish.
-- The overlay can be closed once the winner is decided.
-- The overlay can be minimized to a small bar at the top of the screen while the rolloff runs.
-- The overlay shows which player each pending roll is waiting on.
-- Top seeds in the bracket receive byes.
-- Two-way ties use a head-to-head showdown layout.
-
 ## Bug Fixes
 
-- A rolloff no longer stalls when a player never answers a roll request.
-
-## Changes
-
-- The Show Winner Announcements setting is renamed to Hold on the Winner and keeps the bracket on screen for a few seconds after the winner is decided.
-
-## Documentation
-
-- README adds screenshots for the tie notification, pair rolloff and bracket rolloff.
-- README is rewritten for the rolloff overlay.
+- A combatant deleted during a rolloff forfeits its match and places last in that round.
+- Deleting every entrant mid-rolloff no longer throws an error.
+- Tied bracket losers whose tiebreak rolls also tie re-roll until each roll-off value is distinct.
+- With Include NPCs off, actors owned by a player join rolloffs whatever their actor type.
