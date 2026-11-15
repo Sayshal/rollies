@@ -93,7 +93,7 @@ export class RolloffManager {
    */
   static _getRelevantCombatants(combat) {
     const includeNPCs = game.settings.get(MODULE.ID, MODULE.SETTINGS.INCLUDE_NPCS);
-    return combat.combatants.filter((combatant) => includeNPCs || combatant.actor?.type === 'character');
+    return combat.combatants.filter((combatant) => includeNPCs || combatant.actor?.type === 'character' || combatant.hasPlayerOwner);
   }
 
   /**
@@ -210,7 +210,9 @@ export class RolloffManager {
    */
   static async _playMatch(bracket, r, [ka, kb]) {
     const pair = [bracket.rounds[r][ka], bracket.rounds[r][kb]];
-    for (;;) {
+    const present = (seat) => !!game.combats.get(bracket.combatId)?.combatants.has(bracket.entrants[seat.c].id);
+    const forfeited = () => !pair.every(present);
+    while (!forfeited()) {
       bracket.rolling.push(...pair.map((seat) => seat.c));
       this._broadcast(bracket);
       await Promise.all(
@@ -221,14 +223,19 @@ export class RolloffManager {
         })
       );
       if (!game.combats.has(bracket.combatId)) return;
-      if (pair[0].roll !== pair[1].roll) break;
+      if (forfeited() || pair[0].roll !== pair[1].roll) break;
       await this._pause(TIE_DELAY);
       pair.forEach((seat) => {
         seat.tie = seat.roll;
         delete seat.roll;
       });
     }
-    const [winner, loser] = pair[0].roll > pair[1].roll ? pair : [pair[1], pair[0]];
+    let winner, loser;
+    if (forfeited()) {
+      // A deleted combatant forfeits; it places last in its round
+      [winner, loser] = present(pair[0]) ? pair : [pair[1], pair[0]];
+      loser.roll = 0;
+    } else [winner, loser] = pair[0].roll > pair[1].roll ? pair : [pair[1], pair[0]];
     winner.result = 'won';
     loser.result = 'lost';
     bracket.rounds[r + 1][ka >> 1].c = winner.c;
@@ -280,6 +287,7 @@ export class RolloffManager {
     const updates = bracket.places.map((place, i) => ({ _id: bracket.entrants[place.c].id, initiative: initiativeFor(bracket, i) })).filter((update) => combat.combatants.has(update._id));
     await combat.updateEmbeddedDocuments('Combatant', updates, { rollies: { rolloffResolution: true } });
     const [winner, ...losers] = bracket.places.map((place) => combat.combatants.get(bracket.entrants[place.c].id)).filter(Boolean);
+    if (!winner) return;
     Hooks.callAll(`${MODULE.ID}.rolloffResolved`, {
       combatId: combat.id,
       mode: bracket.count === 2 ? 'pair' : 'bracket',

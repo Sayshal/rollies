@@ -116,6 +116,20 @@ function matchesInRound(bracket, r) {
 }
 
 /**
+ * Re-roll a tie-break until it differs from every value already drawn
+ * @param {Function} rollOff - Returns a random tie-break value
+ * @param {Set<number>} drawn - Values already drawn, mutated
+ * @returns {number} The tie-break value
+ */
+function uniqueOff(rollOff, drawn) {
+  let off = rollOff();
+  // ponytail: gives up after 100 tries so a group larger than the die can't loop forever
+  for (let i = 0; drawn.has(off) && i < 100; i++) off = rollOff();
+  drawn.add(off);
+  return off;
+}
+
+/**
  * Lock in places for a finished round: its losers rank by losing roll, equal rolls roll off
  * @param {Bracket} bracket - The bracket, mutated
  * @param {number} r - Finished round index
@@ -133,7 +147,8 @@ export function placeRound(bracket, r, rollOff) {
     .flatMap((roll) => {
       const group = byRoll.get(roll);
       if (group.length === 1) return [{ c: group[0].c, why: 'lost', roll }];
-      return group.map((loser) => ({ c: loser.c, why: 'rolloff', roll, off: rollOff() })).sort((a, b) => b.off - a.off);
+      const offs = new Set();
+      return group.map((loser) => ({ c: loser.c, why: 'rolloff', roll, off: uniqueOff(rollOff, offs) })).sort((a, b) => b.off - a.off);
     });
   ordered.forEach((place, i) => (bracket.places[start + i] = place));
   if (r === bracket.R - 1) bracket.places[0] = { c: bracket.rounds[bracket.R][0].c, why: 'champion' };
